@@ -4,6 +4,23 @@ All notable changes to AskTheOracle will be documented in this file.
 
 ---
 
+## [A 0.6] — 2026-07-03
+
+### Added
+- PWA support (`manifest.json` + `sw.js` + Service Worker offline caching)
+- Installable on Android/iOS home screen with offline capability
+- PWA icon (`icon.svg`)
+- `wengua-pwa` spec & acceptance report
+
+### Changed
+- Project officially renamed to 天问 (AskTheOracle)
+- GitHub repo renamed from `wengua` to `AskTheOracle`
+
+### Archived
+- `versions/A0.6` snapshot (54 files)
+
+---
+
 ## [A 0.5] — 2026-07-03
 
 ### Added

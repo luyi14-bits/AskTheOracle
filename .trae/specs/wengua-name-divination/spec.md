@@ -94,8 +94,8 @@ function parseName(name) {
 ```
 
 #### Scenario: 单姓双名
-- **WHEN** `parseName('诸葛亮')`
-- **THEN** `{ type:'single-double', surname:['诸'], given:['葛','亮'] }`
+- **WHEN** `parseName('李太白')`  <!-- [FIX v6] 原用"诸葛亮"但"诸葛"是复姓，代码正确返回 compound-single。改为真·单姓双名 -->
+- **THEN** `{ type:'single-double', surname:['李'], given:['太','白'] }`
 
 #### Scenario: 单姓单名
 - **WHEN** `parseName('王明')`
@@ -126,10 +126,10 @@ function nameCast(name) {
 }
 ```
 
-#### Scenario: 诸葛亮验证
-- **WHEN** `nameCast('诸葛亮')`
-- **THEN** 诸15画/葛12画/亮9画 → 上卦15%8=7艮☶, 下卦21%8=5巽☴, 动爻36%6=0→6
-- **AND** 本卦 = 山风蛊䷑
+#### Scenario: 单姓双名 — 李太白验证  <!-- [FIX v6] 原"诸葛亮"→山风蛊䷑ 错误，诸葛是复姓；改为李太白→山天大畜䷙ -->
+- **WHEN** `nameCast('李太白')`
+- **THEN** 李7画/太4画/白5画 → 上卦7%8=7艮☶, 下卦9%8=1乾☰, 动爻16%6=4
+- **AND** 本卦 = 山天大畜䷙
 
 ---
 

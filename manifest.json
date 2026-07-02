@@ -1,0 +1,24 @@
+{
+  "name": "天问",
+  "short_name": "天问",
+  "description": "心存疑问，掷爻问天 — 六十四卦占卜工具",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0f0f0f",
+  "background_color": "#0f0f0f",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
