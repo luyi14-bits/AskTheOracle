@@ -1,6 +1,9 @@
 /**
- * 问卦 · WenGua — 六十四卦完整数据
- * 
+ * AskTheOracle — 六十四卦完整数据
+ *
+ * Copyright (C) 2026 问卦 (AskTheOracle)
+ * Licensed under GNU AGPL v3.0
+ *
  * 编码规则:
  *   - 初爻=LSB (bit 0), 上爻=MSB (bit 5)
  *   - 阳爻=1, 阴爻=0

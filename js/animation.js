@@ -1,3 +1,10 @@
+/**
+ * AskTheOracle — 动画控制
+ *
+ * Copyright (C) 2026 问卦 (AskTheOracle)
+ * Licensed under GNU AGPL v3.0
+ */
+
 const Animation = {
     // [FIX C3] drawGua 已由 animateCoinFlip 替代（app.js 无调用点），保留以兼容未来恢复
     drawGua(container, yao) {

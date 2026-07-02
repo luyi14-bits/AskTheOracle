@@ -1,9 +1,11 @@
 /**
- * 问卦 · WenGua — 康熙字典笔画数据
+ * AskTheOracle — 康熙字典笔画数据
+ *
+ * Copyright (C) 2026 问卦 (AskTheOracle)
+ * Licensed under GNU AGPL v3.0
  *
  * 3000+ 汉字 → 繁体康熙笔画映射表
  * 姓名起卦必须使用康熙字典繁体笔画，与简体笔画差异巨大。
- * MIT License.
  */
 var STROKE_MAP = (function () {
     var map = {};

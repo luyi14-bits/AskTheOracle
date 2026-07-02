@@ -1,3 +1,10 @@
+/**
+ * AskTheOracle — 主逻辑
+ *
+ * Copyright (C) 2026 问卦 (AskTheOracle)
+ * Licensed under GNU AGPL v3.0
+ */
+
 var YAO_LABELS = ["初", "二", "三", "四", "五", "上"];
 
 var XIANTIAN_TRIGRAM = [null, '☰','☱','☲','☳','☴','☵','☶','☷'];
