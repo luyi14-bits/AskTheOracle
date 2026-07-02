@@ -877,6 +877,15 @@ function generateShareCard(result, mode) {
             ctx.fillText(result.bianGua.judgement, 40, yPos);
         }
 
+        ctx.fillStyle = 'rgba(201, 169, 78, 0.07)';
+        ctx.font = 'bold 80px serif';
+        ctx.textAlign = 'center';
+        ctx.save();
+        ctx.translate(300, 400);
+        ctx.rotate(-0.4);
+        ctx.fillText('仅供娱乐', 0, 0);
+        ctx.restore();
+
         ctx.fillStyle = 'rgba(201, 169, 78, 0.4)';
         ctx.font = '14px serif';
         ctx.textAlign = 'center';

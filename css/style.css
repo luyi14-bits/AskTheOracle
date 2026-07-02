@@ -30,6 +30,24 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* --- Global watermark --- */
+body::after {
+    content: '仅供娱乐';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-25deg);
+    font-size: 5rem;
+    color: rgba(201, 169, 78, 0.04);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 0;
+    letter-spacing: 0.5em;
+    font-family: var(--font-main);
 }
 
 #app {
@@ -40,6 +58,8 @@ body {
     flex-direction: column;
     align-items: center;
     padding: 40px 24px;
+    position: relative;
+    z-index: 1;
 }
 
 /* --- Header --- */
@@ -61,6 +81,13 @@ header h1 {
     margin-top: 8px;
 }
 
+.header-disclaimer {
+    color: rgba(201, 169, 78, 0.35);
+    font-size: 0.75rem;
+    margin-top: 4px;
+    letter-spacing: 0.1em;
+}
+
 /* --- Main Stage --- */
 #main-stage {
     flex: 1;
@@ -80,6 +107,20 @@ header h1 {
     align-items: center;
     justify-content: center;
     background: var(--color-surface);
+    position: relative;
+    overflow: hidden;
+}
+
+#gua-display::after {
+    content: '仅供娱乐';
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-size: 0.65rem;
+    color: rgba(201, 169, 78, 0.25);
+    pointer-events: none;
+    letter-spacing: 0.1em;
+    font-family: var(--font-main);
 }
 
 .placeholder {
@@ -136,6 +177,13 @@ footer {
     margin-top: 48px;
     color: var(--color-text-dim);
     font-size: 0.8rem;
+    text-align: center;
+}
+
+.footer-disclaimer {
+    margin-top: 6px;
+    font-size: 0.7rem;
+    color: rgba(201, 169, 78, 0.3);
 }
 
 /* --- Yao Display (爻) --- */
