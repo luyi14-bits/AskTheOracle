@@ -4,7 +4,7 @@
 
 ![版本](https://img.shields.io/badge/version-A%200.5-aa8844)
 ![协议](https://img.shields.io/badge/license-AGPL%20v3-blue)
-![状态](https://img.shields.io/badge/status-开发中-brightgreen)
+![状态](https://img.shields.io/badge/status-功能完整-brightgreen)
 
 > ⚠️ **免责声明**：天问 (AskTheOracle) 仅供娱乐，所有卦象解读不构成任何人生决策依据。
 
@@ -78,9 +78,9 @@
 | 阶段 | 内容 | 状态 |
 |------|------|------|
 | **A 0.2** | 项目初始化 · 资料研究 · 架构设计 | ✅ 已冻结 |
-| **A 0.3** | 铜钱掷爻 MVP + 梅花易数双模式 | ✅ 已冻结 |
-| **A 0.4** | 姓名起卦 + 笔画数据库 + 体验打磨 | ✅ 已冻结 |
-| **A 0.5** | 动画音效 + 分享功能 + 最终发布 | 🔨 开发中 |
+| **A 0.3** | 铜钱掷爻 + 梅花易数双模式 | ✅ 已冻结 |
+| **A 0.4** | 姓名起卦 + 笔画数据库 | ✅ 已冻结 |
+| **A 0.5** | 动画音效 + 分享功能 + 体验打磨 | ✅ 已冻结 |
 
 ---
 
