@@ -30,24 +30,6 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
-    overflow-x: hidden;
-}
-
-/* --- Global watermark --- */
-body::after {
-    content: '仅供娱乐    luyi14-bits 全栈开源项目';
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-25deg);
-    font-size: 4.5rem;
-    color: rgba(201, 169, 78, 0.04);
-    pointer-events: none;
-    white-space: nowrap;
-    z-index: 0;
-    letter-spacing: 0.3em;
-    font-family: var(--font-main);
 }
 
 #app {
@@ -58,8 +40,6 @@ body::after {
     flex-direction: column;
     align-items: center;
     padding: 40px 24px;
-    position: relative;
-    z-index: 1;
 }
 
 /* --- Header --- */
@@ -88,6 +68,13 @@ header h1 {
     letter-spacing: 0.1em;
 }
 
+.header-watermark {
+    color: rgba(201, 169, 78, 0.3);
+    font-size: 0.7rem;
+    margin-top: 6px;
+    letter-spacing: 0.08em;
+}
+
 /* --- Main Stage --- */
 #main-stage {
     flex: 1;
@@ -107,20 +94,6 @@ header h1 {
     align-items: center;
     justify-content: center;
     background: var(--color-surface);
-    position: relative;
-    overflow: hidden;
-}
-
-#gua-display::after {
-    content: '仅供娱乐';
-    position: absolute;
-    bottom: 8px;
-    right: 12px;
-    font-size: 0.65rem;
-    color: rgba(201, 169, 78, 0.25);
-    pointer-events: none;
-    letter-spacing: 0.1em;
-    font-family: var(--font-main);
 }
 
 .placeholder {
