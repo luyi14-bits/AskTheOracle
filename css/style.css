@@ -1,0 +1,322 @@
+/* ========================================
+   问卦 · WenGua — 样式
+   ======================================== */
+
+/* --- Reset & Base --- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --color-bg: #0f0f0f;
+    --color-surface: #1a1a1a;
+    --color-text: #e0d6c2;
+    --color-text-dim: #7a7060;
+    --color-accent: #c9a94e;
+    --color-accent-glow: #f0d060;
+    --font-main: "Microsoft YaHei", "PingFang SC", "Noto Serif SC", serif;
+}
+
+body {
+    font-family: var(--font-main);
+    background: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#app {
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px;
+}
+
+/* --- Header --- */
+header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+header h1 {
+    font-size: 2.4rem;
+    color: var(--color-accent);
+    letter-spacing: 0.3em;
+    font-weight: 400;
+}
+
+.subtitle {
+    color: var(--color-text-dim);
+    font-size: 0.95rem;
+    margin-top: 8px;
+}
+
+/* --- Main Stage --- */
+#main-stage {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 36px;
+}
+
+#gua-display {
+    width: 240px;
+    height: 320px;
+    border: 2px solid var(--color-accent);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface);
+}
+
+.placeholder {
+    color: var(--color-text-dim);
+    font-size: 1.1rem;
+}
+
+/* --- Controls --- */
+#controls {
+    display: flex;
+    gap: 16px;
+}
+
+.btn-primary {
+    padding: 14px 48px;
+    font-size: 1.1rem;
+    font-family: var(--font-main);
+    background: var(--color-accent);
+    color: var(--color-bg);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.15em;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: var(--color-accent-glow);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* --- Result --- */
+.hidden {
+    display: none;
+}
+
+#result {
+    width: 100%;
+    text-align: center;
+    padding: 24px;
+    background: var(--color-surface);
+    border-radius: 12px;
+}
+
+/* --- Footer --- */
+footer {
+    margin-top: 48px;
+    color: var(--color-text-dim);
+    font-size: 0.8rem;
+}
+
+/* --- Yao Display (爻) --- */
+#gua-display {
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    overflow: hidden;
+}
+
+.yao {
+    font-size: 22px;
+    text-align: center;
+    letter-spacing: 0.15em;
+    line-height: 1.8;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    position: relative;
+    width: 100%;
+}
+
+.yao-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.yao-yang {
+    color: var(--color-text);
+}
+
+.yao-yin {
+    color: var(--color-text);
+    letter-spacing: 0.5em;
+}
+
+.yao-changing {
+    color: var(--color-accent);
+    text-shadow: 0 0 8px rgba(201, 169, 78, 0.4);
+}
+
+.yao-changing-mark {
+    font-size: 14px;
+    margin-left: 8px;
+    vertical-align: super;
+}
+
+/* --- Button Disabled --- */
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-primary:disabled:hover {
+    background: var(--color-accent);
+    transform: none;
+}
+
+/* --- Result Area --- */
+#gua-name {
+    font-size: 1.6rem;
+    color: var(--color-accent);
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+}
+
+#gua-symbol {
+    font-size: 56px;
+    line-height: 1.4;
+    margin-bottom: 16px;
+}
+
+#gua-interpretation {
+    text-align: left;
+    line-height: 1.8;
+}
+
+.gua-judgement {
+    font-size: 1rem;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(201, 169, 78, 0.2);
+    margin-bottom: 12px;
+}
+
+.yao-lines-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.yao-line-item {
+    font-size: 0.95rem;
+    padding: 6px 12px;
+    border-radius: 4px;
+    line-height: 1.6;
+}
+
+.yao-line-item.changing {
+    color: var(--color-accent);
+    border-left: 3px solid var(--color-accent);
+    background: rgba(201, 169, 78, 0.08);
+}
+
+/* --- Bian Gua Card (变卦) --- */
+.bian-gua-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-accent);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.bian-gua-header {
+    font-size: 1.2rem;
+    color: var(--color-accent);
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+}
+
+.bian-gua-judgement {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* --- Gua Focus (解读焦点) --- */
+.gua-focus {
+    border-left: 4px solid var(--color-accent);
+    padding: 12px 16px;
+    background: rgba(201, 169, 78, 0.06);
+    border-radius: 0 8px 8px 0;
+}
+
+.gua-focus-header {
+    font-size: 1.05rem;
+    color: var(--color-accent);
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+}
+
+.gua-focus-primary {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 4px;
+}
+
+.gua-focus-secondary {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--color-text-dim);
+}
+
+/* --- Responsive (480px) --- */
+@media (max-width: 480px) {
+    #app {
+        padding: 24px 16px;
+    }
+
+    #gua-display {
+        width: 200px;
+        height: 280px;
+    }
+
+    .yao {
+        font-size: 18px;
+    }
+
+    #gua-symbol {
+        font-size: 48px;
+    }
+
+    #gua-name {
+        font-size: 1.3rem;
+    }
+
+    .btn-primary {
+        padding: 12px 36px;
+        font-size: 1rem;
+    }
+
+    .bian-gua-card {
+        padding: 12px;
+    }
+
+    .gua-focus {
+        padding: 10px 12px;
+    }
+}
