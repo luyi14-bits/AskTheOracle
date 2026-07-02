@@ -2,6 +2,8 @@
 
 > 🎋 心存疑问，掷爻问天 — 一枚精致的开源算卦小玩具。
 
+🌐 **在线体验**：[luyi14-bits.github.io/AskTheOracle](https://luyi14-bits.github.io/AskTheOracle/)（手机浏览器打开可安装到桌面）
+
 ![版本](https://img.shields.io/badge/version-A%200.6-aa8844)
 ![协议](https://img.shields.io/badge/license-AGPL%20v3-blue)
 ![状态](https://img.shields.io/badge/status-PWA%20就绪-success)
