@@ -1,7 +1,7 @@
 /**
  * AskTheOracle — 康熙字典笔画数据
  *
- * Copyright (C) 2026 问卦 (AskTheOracle)
+ * Copyright (C) 2026 天问 (AskTheOracle)
  * Licensed under GNU AGPL v3.0
  *
  * 3000+ 汉字 → 繁体康熙笔画映射表

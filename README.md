@@ -1,12 +1,12 @@
-# 问卦 · AskTheOracle
+# 天问 · AskTheOracle
 
-> 🎋 一枚精致的小算卦玩具 — 心存疑问，掷爻问卦。
+> 🎋 心存疑问，掷爻问天 — 一枚精致的开源算卦小玩具。
 
 ![版本](https://img.shields.io/badge/version-A%200.5-aa8844)
 ![协议](https://img.shields.io/badge/license-AGPL%20v3-blue)
 ![状态](https://img.shields.io/badge/status-开发中-brightgreen)
 
-> ⚠️ **免责声明**：问卦 (AskTheOracle) 仅供娱乐，所有卦象解读不构成任何人生决策依据。
+> ⚠️ **免责声明**：天问 (AskTheOracle) 仅供娱乐，所有卦象解读不构成任何人生决策依据。
 
 ---
 
@@ -25,7 +25,7 @@
 ## 📁 项目结构
 
 ```
-问卦/
+天问/
 ├── index.html              # 应用入口
 ├── css/
 │   └── style.css           # 全局样式

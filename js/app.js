@@ -1,7 +1,7 @@
 /**
  * AskTheOracle — 主逻辑
  *
- * Copyright (C) 2026 问卦 (AskTheOracle)
+ * Copyright (C) 2026 天问 (AskTheOracle)
  * Licensed under GNU AGPL v3.0
  */
 
@@ -880,7 +880,7 @@ function generateShareCard(result, mode) {
         ctx.fillStyle = 'rgba(201, 169, 78, 0.4)';
         ctx.font = '14px serif';
         ctx.textAlign = 'center';
-        ctx.fillText('问卦 · WenGua', 300, 770);
+        ctx.fillText('天问 · AskTheOracle', 300, 770);
 
         ctx.fillStyle = 'rgba(201, 169, 78, 0.15)';
         ctx.font = '12px serif';
@@ -890,7 +890,7 @@ function generateShareCard(result, mode) {
             var url = URL.createObjectURL(blob);
             var a = document.createElement('a');
             a.href = url;
-            a.download = result.benGua.name.replace(/[^一-龥]/g, '') + '_问卦.png';
+            a.download = result.benGua.name.replace(/[^一-龥]/g, '') + '_天问.png';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

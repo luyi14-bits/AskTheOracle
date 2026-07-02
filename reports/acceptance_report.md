@@ -1,8 +1,8 @@
-# 🎯 问卦 · WenGua — 严格验收报告
+﻿# 🎯 天问 · AskTheOracle — 严格验收报告
 
 | 项目 | 内容 |
 |------|------|
-| **项目名称** | 问卦 · WenGua v0.2 MVP |
+| **项目名称** | 天问 · AskTheOracle v0.2 MVP |
 | **验收日期** | 2026-07-02 |
 | **E2E 基准** | 40/40 |
 | **验收结论** | ❌ FAIL（双重标签 + 标签顺序错误 = 严重缺陷） |
@@ -12,8 +12,8 @@
 
 ## 一、验收标准
 
-> 来源：[spec.md](file:///d:/Desktop/卦象/.trae/specs/wengua-core-casting/spec.md) — ADDED Requirements
-> 来源：[checklist.md](file:///d:/Desktop/卦象/.trae/specs/wengua-core-casting/checklist.md) — Task 1 ~ Task 6
+> 来源：[spec.md](file:///d:/Desktop/卦象/.trae/specs/AskTheOracle-core-casting/spec.md) — ADDED Requirements
+> 来源：[checklist.md](file:///d:/Desktop/卦象/.trae/specs/AskTheOracle-core-casting/checklist.md) — Task 1 ~ Task 6
 
 ### 1.1 核心目标
 
@@ -100,7 +100,7 @@ function getYaoLabel(index, type) → string
 
 ### 4.1 What Changes 完成度
 
-> 来源：[spec.md](file:///d:/Desktop/卦象/.trae/specs/wengua-core-casting/spec.md#What-Changes)
+> 来源：[spec.md](file:///d:/Desktop/卦象/.trae/specs/AskTheOracle-core-casting/spec.md#What-Changes)
 
 | # | Spec 要求 | 实现状态 | 代码证据 | 结论 |
 |---|-----------|---------|----------|------|

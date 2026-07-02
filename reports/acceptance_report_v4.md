@@ -1,9 +1,9 @@
-# 🎯 问卦 · WenGua — 严格验收报告 v4
+﻿# 🎯 天问 · AskTheOracle — 严格验收报告 v4
 
 | 项目 | 内容 |
 |------|------|
-| **任务编号** | Spec: wengua-core-casting + wengua-meihua + 姓名起卦 |
-| **任务名称** | 问卦 · WenGua v0.4 三模式（铜钱+梅花+姓名） |
+| **任务编号** | Spec: AskTheOracle-core-casting + AskTheOracle-meihua + 姓名起卦 |
+| **任务名称** | 天问 · AskTheOracle v0.4 三模式（铜钱+梅花+姓名） |
 | **验收日期** | 2026-07-02 |
 | **自动化测试** | 57 项 E2E（含CSS可见性/单元算法/持久化/渲染） |
 | **验收结论** | ❌ CONDITIONAL FAIL — 1个严重缺陷+1个修复的缺陷 |
@@ -13,8 +13,8 @@
 
 ## 一、验收标准
 
-> 来源：[spec.md](file:///d:/Desktop/卦象/.trae/specs/wengua-core-casting/spec.md)
-> 来源：[spec.md](file:///d:/Desktop/卦象/.trae/specs/wengua-meihua/spec.md)
+> 来源：[spec.md](file:///d:/Desktop/卦象/.trae/specs/AskTheOracle-core-casting/spec.md)
+> 来源：[spec.md](file:///d:/Desktop/卦象/.trae/specs/AskTheOracle-meihua/spec.md)
 > 新增：姓名起卦模式
 
 ### 核心功能
@@ -189,7 +189,7 @@ switchMode('tongqian');  // 强制JS管理初始状态
 
 ```
 ╔══════════════════════════════════════════════════╗
-║        问卦 · WenGua v0.4 — 验收结论              ║
+║        天问 · AskTheOracle v0.4 — 验收结论              ║
 ║                                                  ║
 ║       ❌ CONDITIONAL FAIL                        ║
 ║                                                  ║

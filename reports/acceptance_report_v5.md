@@ -1,8 +1,8 @@
-# 🎯 问卦 · WenGua — 严格验收报告 v5 (终验)
+﻿# 🎯 天问 · AskTheOracle — 严格验收报告 v5 (终验)
 
 | 项目 | 内容 |
 |------|------|
-| **任务编号** | 问卦 · WenGua v0.5 三模式（铜钱+梅花+姓名） |
+| **任务编号** | 天问 · AskTheOracle v0.5 三模式（铜钱+梅花+姓名） |
 | **验收日期** | 2026-07-02 |
 | **自动化测试** | 53 项（含CSS/单元/算法/E2E/持久化/新功能） |
 | **验收结论** | ✅ **CONDITIONAL PASS** |
@@ -12,7 +12,7 @@
 
 ## 一、验收标准
 
-> 来源：wengua-core-casting/spec.md + wengua-meihua/spec.md + 新增姓名起卦 + 音效 + 分享
+> 来源：AskTheOracle-core-casting/spec.md + AskTheOracle-meihua/spec.md + 新增姓名起卦 + 音效 + 分享
 
 | 模式 | 核心函数 | 状态 |
 |------|---------|:----:|
@@ -150,7 +150,7 @@ if (name.length >= 4) {
 
 ```
 ╔══════════════════════════════════════════════════╗
-║        问卦 · WenGua v0.5 — 验收结论              ║
+║        天问 · AskTheOracle v0.5 — 验收结论              ║
 ║                                                  ║
 ║       ✅ CONDITIONAL PASS                        ║
 ║                                                  ║
