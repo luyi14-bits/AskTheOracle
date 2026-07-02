@@ -15,43 +15,14 @@
         </header>
 
         <main id="main-stage">
-            <!-- 模式切换 -->
-            <div id="mode-tabs">
-                <button id="tab-tongqian" class="mode-tab active">铜钱掷爻</button>
-                <button id="tab-meihua" class="mode-tab">梅花易数</button>
-            </div>
-
             <!-- 卦象展示区 -->
             <div id="gua-display">
                 <p class="placeholder">🎋 静心凝神，掷爻起卦</p>
             </div>
 
-            <!-- 铜钱操作区 -->
+            <!-- 操作区 -->
             <div id="controls">
                 <button id="btn-cast" class="btn-primary">掷爻起卦</button>
-            </div>
-
-            <!-- 梅花操作区 -->
-            <div id="meihua-controls" class="hidden">
-                <div class="meihua-input-row">
-                    <div class="meihua-input-group">
-                        <label for="input-num1">上卦数</label>
-                        <input type="number" id="input-num1" min="1" max="9999" placeholder="1-9999">
-                    </div>
-                    <div class="meihua-input-group">
-                        <label for="input-num2">下卦数</label>
-                        <input type="number" id="input-num2" min="1" max="9999" placeholder="1-9999">
-                    </div>
-                    <div class="meihua-input-group">
-                        <label for="input-num3">动爻数</label>
-                        <input type="number" id="input-num3" min="1" max="9999" placeholder="1-9999">
-                    </div>
-                </div>
-                <div class="meihua-btn-row">
-                    <button id="btn-meihua-random" class="btn-aux">🎲 随机数字</button>
-                    <button id="btn-meihua-time" class="btn-aux">🕐 用当前时间</button>
-                </div>
-                <button id="btn-meihua-cast" class="btn-primary">起卦</button>
             </div>
 
             <!-- 结果区 -->
