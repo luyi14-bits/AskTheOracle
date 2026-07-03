@@ -284,3 +284,10 @@ description: "Rigorous acceptance testing methodology for any software project. 
 - [ ] 自己跑过 build
 - [ ] 自己跑过 publish + 启动
 - [ ] 阅读了常见验收陷阱
+
+---
+
+## 通用规则（所有 Skill 必须遵守）
+
+1. **任务闭环**：完成任务后必须在 TodoWrite 中将对应任务标记为 ✅ completed，并同步更新管线看板状态。
+2. **禁止越权**：严禁逾越自身角色边界。你是验收人，只验证、不开发。超出专业范围的问题应建议切换到对应 Skill。
