@@ -33,6 +33,7 @@
                 <button id="tab-meihua" class="mode-tab">梅花易数</button>
                 <button id="tab-name" class="mode-tab">姓名起卦</button>
                 <button id="tab-jiaobei" class="mode-tab">掷筊问杯</button>
+                <button id="tab-liuren" class="mode-tab">掐指小六壬</button>
             </div>
 
             <!-- 卦象展示区 -->
@@ -74,6 +75,28 @@
                     <input type="text" id="input-name" placeholder="请输入姓名（如：诸葛亮）" maxlength="10">
                 </div>
                 <button id="btn-name-cast" class="btn-primary">起卦</button>
+                <button id="btn-toggle-cross" class="btn-aux">交叉分析</button>
+                <div id="birth-controls" class="hidden">
+                    <div class="birth-input-row">
+                        <div class="birth-input-group">
+                            <label for="input-birth-year">年</label>
+                            <input type="number" id="input-birth-year" min="1900" max="2100" placeholder="1990">
+                        </div>
+                        <div class="birth-input-group">
+                            <label for="input-birth-month">月</label>
+                            <input type="number" id="input-birth-month" min="1" max="12" placeholder="1">
+                        </div>
+                        <div class="birth-input-group">
+                            <label for="input-birth-day">日</label>
+                            <input type="number" id="input-birth-day" min="1" max="31" placeholder="1">
+                        </div>
+                        <div class="birth-input-group">
+                            <label for="input-birth-hour">时</label>
+                            <input type="number" id="input-birth-hour" min="0" max="23" placeholder="12">
+                        </div>
+                    </div>
+                    <button id="btn-cross-cast" class="btn-primary">交叉起卦</button>
+                </div>
             </div>
 
             <!-- 掷筊问杯区 -->
@@ -82,6 +105,25 @@
                     <p class="placeholder">🙏 掷筊问杯，诚心则灵</p>
                 </div>
                 <button id="btn-jiaobei" class="btn-primary">掷杯</button>
+            </div>
+
+            <!-- 小六壬掐指区 -->
+            <div id="liuren-controls" class="hidden">
+                <div class="meihua-input-row">
+                    <div class="meihua-input-group">
+                        <label for="input-liuren-month">农历月</label>
+                        <input type="number" id="input-liuren-month" min="1" max="12" placeholder="1-12">
+                    </div>
+                    <div class="meihua-input-group">
+                        <label for="input-liuren-day">农历日</label>
+                        <input type="number" id="input-liuren-day" min="1" max="30" placeholder="1-30">
+                    </div>
+                    <div class="meihua-input-group">
+                        <label for="input-liuren-hour">时辰</label>
+                        <input type="number" id="input-liuren-hour" min="1" max="12" placeholder="1-12">
+                    </div>
+                </div>
+                <button id="btn-liuren-cast" class="btn-primary">掐指推算</button>
             </div>
 
             <!-- 结果区 -->

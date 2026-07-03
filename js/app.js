@@ -5,6 +5,162 @@
  * Licensed under GNU AGPL v3.0
  */
 
+// --- 农历转换模块 (内嵌简化版) ---
+
+var LunarCalendar = (function () {
+    /* 农历年信息编码 (1900-2100)
+     * 每个值16位: bit0-3=闰月(0=无闰月), bit4-15=每月大小(1=30天,0=29天, bit4=正月)
+     * 数据来源: 香港天文台农历数据
+     */
+    var LUNAR_YEAR_INFO = [
+        0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,
+        0x04ae0, 0x0a5b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540, 0x0d6a0, 0x0ada2, 0x095b0, 0x14977,
+        0x04970, 0x0a4b0, 0x0b4b5, 0x06a50, 0x06d40, 0x1ab54, 0x02b60, 0x09570, 0x052f2, 0x04970,
+        0x06566, 0x0d4a0, 0x0ea50, 0x06e95, 0x05ad0, 0x02b60, 0x186e3, 0x092e0, 0x1c8d7, 0x0c950,
+        0x0d4a0, 0x1d8a6, 0x0b550, 0x056a0, 0x1a5b4, 0x025d0, 0x092d0, 0x0d2b2, 0x0a950, 0x0b557,
+        0x06ca0, 0x0b550, 0x15355, 0x04da0, 0x0a5b0, 0x14573, 0x052b0, 0x0a9a8, 0x0e950, 0x06aa0,
+        0x0aea6, 0x0ab50, 0x04b60, 0x0aae4, 0x0a570, 0x05260, 0x0f263, 0x0d950, 0x05b57, 0x056a0,
+        0x096d0, 0x04dd5, 0x04ad0, 0x0a4d0, 0x0d4d4, 0x0d250, 0x0d558, 0x0b540, 0x0b6a0, 0x195a6,
+        0x095b0, 0x049b0, 0x0a974, 0x0a4b0, 0x0b27a, 0x06a50, 0x06d40, 0x0af46, 0x0ab60, 0x09570,
+        0x04af5, 0x04970, 0x064b0, 0x074a3, 0x0ea50, 0x06b58, 0x05ac0, 0x0ab60, 0x096d5, 0x092e0,
+        0x0c960, 0x0d954, 0x0d4a0, 0x0da50, 0x07552, 0x056a0, 0x0abb7, 0x025d0, 0x092d0, 0x0cab5,
+        0x0a950, 0x0b4a0, 0x0baa4, 0x0ad50, 0x055d9, 0x04ba0, 0x0a5b0, 0x15176, 0x052b0, 0x0a930,
+        0x07954, 0x06aa0, 0x0ad50, 0x05b52, 0x04b60, 0x0a6e6, 0x0a4e0, 0x0d260, 0x0ea65, 0x0d530,
+        0x05aa0, 0x076a3, 0x096d0, 0x04afb, 0x04ad0, 0x0a4d0, 0x1d0b6, 0x0d250, 0x0d520, 0x0dd45,
+        0x0b5a0, 0x056d0, 0x055b2, 0x049b0, 0x0a577, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0,
+        0x14b63, 0x09370, 0x049f8, 0x04970, 0x064b0, 0x168a6, 0x0ea50, 0x06b20, 0x1a6c4, 0x0aae0,
+        0x0a2e0, 0x0d2e3, 0x0c960, 0x0d557, 0x0d4a0, 0x0da50, 0x05d55, 0x056a0, 0x0a6d0, 0x055d4,
+        0x052d0, 0x0a9b8, 0x0a950, 0x0b4a0, 0x0b6a6, 0x0ad50, 0x055a0, 0x0aba4, 0x0a5b0, 0x052b0,
+        0x0b273, 0x06930, 0x07337, 0x06aa0, 0x0ad50, 0x14b55, 0x04b60, 0x0a570, 0x054e4, 0x0d160,
+        0x0e968, 0x0d520, 0x0daa0, 0x16aa6, 0x056d0, 0x04ae0, 0x0a9d4, 0x0a4d0, 0x0d150, 0x0f252,
+        0x0d520
+    ];
+
+    var BASE_YEAR = 1900;
+    var BASE_YEAR_DAYS_OFFSET = 49; // days from 1900-01-01 to 1900-01-31 (lunar 1900-01-01)
+
+    function daysInMonth(year, month) {
+        if (month === 2) {
+            return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 29 : 28;
+        }
+        var m31 = [1, 3, 5, 7, 8, 10, 12];
+        for (var i = 0; i < m31.length; i++) {
+            if (m31[i] === month) return 31;
+        }
+        return 30;
+    }
+
+    function solarDaysFromBase(year, month, day) {
+        var days = 0;
+        for (var y = BASE_YEAR; y < year; y++) {
+            days += (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 366 : 365;
+        }
+        for (var m = 1; m < month; m++) {
+            days += daysInMonth(year, m);
+        }
+        days += day - 1;
+        return days;
+    }
+
+    function getLunarYearDays(lunarYearIndex) {
+        var info = LUNAR_YEAR_INFO[lunarYearIndex];
+        var days = 0;
+        for (var m = 0; m < 12; m++) {
+            days += (info & (0x8000 >> (m + 4))) ? 30 : 29;
+        }
+        var leap = info & 0xf;
+        if (leap > 0) {
+            days += (info & (0x10000 >> leap)) ? 30 : 29;
+        }
+        return days;
+    }
+
+    function getLunarMonthsArray(lunarYearIndex) {
+        var info = LUNAR_YEAR_INFO[lunarYearIndex];
+        var leap = info & 0xf;
+        var months = [];
+        for (var m = 1; m <= 12; m++) {
+            months.push({ month: m, isLeap: false, days: (info & (0x8000 >> (m + 4))) ? 30 : 29 });
+            if (leap === m) {
+                months.push({ month: m, isLeap: true, days: (info & (0x10000 >> m)) ? 30 : 29 });
+            }
+        }
+        return months;
+    }
+
+    /**
+     * 公历转农历
+     * @returns {{ lunarYear: number, lunarMonth: number, lunarDay: number, isLeap: boolean, yearZhiNum: number }}
+     *   yearZhiNum: 1=子,2=丑,...,12=亥
+     */
+    function solarToLunar(year, month, day) {
+        var solarDays = solarDaysFromBase(year, month, day);
+        if (solarDays < 0) {
+            // before 1900, fallback approximate
+            var yz = ((year - 4) % 12 + 12) % 12;
+            // 【FIX A1】yz+1 替代 yz===0?12:yz，确保子年返回1而非12
+            return { lunarYear: year, lunarMonth: month, lunarDay: day, isLeap: false, yearZhiNum: yz + 1 };
+        }
+
+        var lunarDaysOffset = solarDays + BASE_YEAR_DAYS_OFFSET;
+        var lunarYearIdx = 0;
+        var lunarYear = BASE_YEAR;
+        var yearDays;
+        while (lunarYearIdx < LUNAR_YEAR_INFO.length) {
+            yearDays = getLunarYearDays(lunarYearIdx);
+            if (lunarDaysOffset < yearDays) break;
+            lunarDaysOffset -= yearDays;
+            lunarYearIdx++;
+            lunarYear++;
+        }
+
+        if (lunarYearIdx >= LUNAR_YEAR_INFO.length) {
+            // beyond 2100, fallback
+            var yz2 = ((year - 4) % 12 + 12) % 12;
+            // 【FIX A1】yz+1 替代 yz===0?12:yz
+            return { lunarYear: year, lunarMonth: month, lunarDay: day, isLeap: false, yearZhiNum: yz2 + 1 };
+        }
+
+        var months = getLunarMonthsArray(lunarYearIdx);
+        var lunarMonth = 0;
+        var lunarDay = 0;
+        var isLeap = false;
+        for (var i = 0; i < months.length; i++) {
+            if (lunarDaysOffset < months[i].days) {
+                lunarMonth = months[i].month;
+                lunarDay = lunarDaysOffset + 1;
+                isLeap = months[i].isLeap;
+                break;
+            }
+            lunarDaysOffset -= months[i].days;
+        }
+
+        var yz = ((lunarYear - 4) % 12 + 12) % 12;
+        return {
+            lunarYear: lunarYear,
+            lunarMonth: lunarMonth,
+            lunarDay: lunarDay,
+            isLeap: isLeap,
+            // 【FIX A1】yz+1 替代 yz===0?12:yz
+            yearZhiNum: yz + 1
+        };
+    }
+
+    /**
+     * 小时转时辰编号
+     * @returns 1=子时(23-1),2=丑时(1-3),...,12=亥时(21-23)
+     */
+    function hourToShift(hour) {
+        var h = Math.floor((hour + 1) / 2) % 12;
+        return h === 0 ? 12 : h;
+    }
+
+    return {
+        solarToLunar: solarToLunar,
+        hourToShift: hourToShift
+    };
+})();
+
 var YAO_LABELS = ["初", "二", "三", "四", "五", "上"];
 
 var XIANTIAN_TRIGRAM = [null, '☰','☱','☲','☳','☴','☵','☶','☷'];
@@ -27,6 +183,19 @@ var savedTongqianResult = null;
 var savedMeihuaResult = null;
 var savedNameResult = null;
 var savedJiaobeiResult = null;
+var savedCrossResult = null;
+var savedLiurenResult = null;
+var isCrossModeActive = false;
+
+// --- 交叉起卦命运等级 ---
+
+var CROSS_FATE = {
+    5: { label: '大吉·天人合一', text: '姓名与生辰八字高度契合，天时地利人和俱全，万事顺遂。', color: '#4caf50' },
+    4: { label: '吉·相辅相成', text: '姓名与生辰配合得当，运势通畅，努力有回报。', color: '#2196f3' },
+    3: { label: '平·中规中矩', text: '姓名与生辰五行搭配一般，无大碍亦无大助，需自身努力。', color: '#c9a94e' },
+    2: { label: '弱·略有冲克', text: '姓名与生辰存在轻微冲克，行事多遇小阻，宜修身养性。', color: '#ffc107' },
+    1: { label: '凶·刑冲克害', text: '姓名与生辰严重不协，多有波折，建议调整或择吉改名。', color: '#e05555' }
+};
 
 // [FIX B3] COMPOUND_SURNAMES 去重：移除 司马/宇文/慕容/诸葛/欧阳/梁丘 重复条目
 var COMPOUND_SURNAMES = {
@@ -155,6 +324,348 @@ function appendPlainCard(fragment, gua) {
     card.textContent = '💬 ' + text;
     fragment.appendChild(card);
 }
+
+// --- 音效系统 ---
+
+var audioCtx = null;
+function ensureAudio() {
+    if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { console.warn('[audio] AudioContext not available:', e); }
+    }
+    return audioCtx;
+}
+
+function playCastSound() {
+    try {
+        var ctx = ensureAudio();
+        if (!ctx) return;
+        var o = ctx.createOscillator();
+        var g = ctx.createGain();
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.frequency.value = 800;
+        o.type = 'sine';
+        g.gain.setValueAtTime(0.08, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        o.start();
+        o.stop(ctx.currentTime + 0.1);
+    } catch(e) { console.warn('[audio] playCastSound failed:', e); }
+}
+
+function playChangingSound() {
+    try {
+        var ctx = ensureAudio();
+        if (!ctx) return;
+        var o = ctx.createOscillator();
+        var g = ctx.createGain();
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.frequency.value = 1200;
+        o.type = 'sine';
+        g.gain.setValueAtTime(0.08, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        o.start();
+        o.stop(ctx.currentTime + 0.2);
+    } catch(e) { console.warn('[audio] playChangingSound failed:', e); }
+}
+
+// --- 分享卡片 ---
+
+function generateShareCard(result, mode) {
+    try {
+        var canvas = document.createElement('canvas');
+        canvas.width = 600;
+        canvas.height = 800;
+        var ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = '#0f0f0f';
+        ctx.fillRect(0, 0, 600, 800);
+
+        ctx.strokeStyle = '#c9a94e';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(10, 10, 580, 780);
+
+        ctx.fillStyle = '#f0d060';
+        ctx.font = '32px serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(result.benGua.name + ' ' + result.benGua.symbol, 300, 80);
+
+        ctx.font = '64px serif';
+        ctx.fillText(result.benGua.symbol, 300, 180);
+
+        ctx.fillStyle = '#e0d6c2';
+        ctx.font = '18px serif';
+        wrapText(ctx, result.benGua.judgement, 40, 230, 520, 28);
+
+        var yPos = 290;
+        ctx.font = '16px serif';
+        if (result.yaoLines) {
+            for (var i = 5; i >= 0; i--) {
+                var label = result.yaoLines[i].changing ? '⚡ ' : '';
+                ctx.fillStyle = result.yaoLines[i].changing ? '#c9a94e' : '#e0d6c2';
+                ctx.textAlign = 'left';
+                ctx.fillText(label + result.benGua.lines[i], 40, yPos);
+                yPos += 26;
+            }
+        }
+
+        if (result.bianGua) {
+            yPos += 12;
+            ctx.fillStyle = '#c9a94e';
+            ctx.font = '18px serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('→ 变卦：' + result.bianGua.name + ' ' + result.bianGua.symbol, 40, yPos);
+            yPos += 26;
+            ctx.fillStyle = '#e0d6c2';
+            ctx.font = '16px serif';
+            ctx.fillText(result.bianGua.judgement, 40, yPos);
+        }
+
+        ctx.fillStyle = 'rgba(201, 169, 78, 0.07)';
+        ctx.font = 'bold 72px serif';
+        ctx.textAlign = 'center';
+        ctx.save();
+        ctx.translate(300, 390);
+        ctx.rotate(-0.4);
+        ctx.fillText('仅供娱乐', 0, -30);
+        ctx.fillText('luyi14-bits', 0, 40);
+        ctx.restore();
+
+        ctx.fillStyle = 'rgba(201, 169, 78, 0.4)';
+        ctx.font = '14px serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('天问 · AskTheOracle', 300, 770);
+
+        ctx.fillStyle = 'rgba(201, 169, 78, 0.15)';
+        ctx.font = '12px serif';
+        ctx.fillText('本工具仅供娱乐，结果请勿作为人生决策依据', 300, 755);
+
+        canvas.toBlob(function(blob) {
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = result.benGua.name.replace(/[^一-龥]/g, '') + '_天问.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+        });
+    } catch(e) { console.warn('[share] Canvas share failed:', e); }
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    var chars = text.split('');
+    var line = '';
+    var lineY = y;
+    for (var i = 0; i < chars.length; i++) {
+        var testLine = line + chars[i];
+        if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+            ctx.fillText(line, x, lineY);
+            line = chars[i];
+            lineY += lineHeight;
+        } else {
+            line = testLine;
+        }
+    }
+    ctx.fillText(line, x, lineY);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    var btnCast = document.getElementById("btn-cast");
+    var resultDiv = document.getElementById("result");
+    var guaDisplay = document.getElementById("gua-display");
+    var tabTongqian = document.getElementById('tab-tongqian');
+    var tabMeihua = document.getElementById('tab-meihua');
+    var tabName = document.getElementById('tab-name');
+    var tabJiaobei = document.getElementById('tab-jiaobei');
+    var tabLiuren = document.getElementById('tab-liuren');
+    var btnMeihuaCast = document.getElementById('btn-meihua-cast');
+    var btnRandom = document.getElementById('btn-meihua-random');
+    var btnTime = document.getElementById('btn-meihua-time');
+    var btnCrossCast = document.getElementById('btn-cross-cast');
+    var btnLiuren = document.getElementById('btn-liuren-cast');
+    var isCasting = false;
+    var isJiaobeiCasting = false;
+
+    btnCast.addEventListener("click", async function () {
+        if (isCasting) return;
+        isCasting = true;
+        btnCast.disabled = true;
+        btnCast.textContent = "起卦中…";
+
+        document.querySelectorAll('#gua-display .yao, #gua-display .coin-flip').forEach(function (el) { el.remove(); });
+        var placeholder = guaDisplay.querySelector('.placeholder');
+        if (placeholder) placeholder.style.display = 'none';
+
+        resultDiv.classList.add('hidden');
+
+        const yaoLines = [];
+        for (let i = 0; i < 6; i++) {
+            const yao = castOnce();
+            yaoLines.push(yao);
+            Animation.animateCoinFlip(guaDisplay, yao);
+            playCastSound();
+            if (yao.changing) {
+                setTimeout(playChangingSound, 200);
+            }
+            await new Promise(function (r) { setTimeout(r, 500); });
+        }
+
+        const benGua = findGua(yaoLines);
+        const bianGuaResult = getBianGua(benGua, yaoLines);
+        const focus = getInterpretationFocus(benGua, bianGuaResult.gua, bianGuaResult.indices);
+
+        const result = {
+            benGua,
+            bianGua: bianGuaResult.gua,
+            changingIndices: bianGuaResult.indices,
+            focus,
+            yaoLines
+        };
+        savedTongqianResult = result;
+
+        renderResult(result);
+        resultDiv.classList.remove('hidden');
+
+        btnCast.disabled = false;
+        btnCast.textContent = "再掷一卦";
+        isCasting = false;
+    });
+
+    tabTongqian.addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('tongqian'); });
+    tabMeihua.addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('meihua'); });
+    tabName.addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('name'); });
+    tabJiaobei.addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('jiaobei'); });
+    if (tabLiuren) {
+        tabLiuren.addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('liuren'); });
+    }
+
+    btnMeihuaCast.addEventListener('click', doMeihuaCast);
+
+    btnRandom.addEventListener('click', function () {
+        var n1 = Math.floor(Math.random() * 999) + 1;
+        var n2 = Math.floor(Math.random() * 999) + 1;
+        var n3 = Math.floor(Math.random() * 999) + 1;
+        document.getElementById('input-num1').value = n1;
+        document.getElementById('input-num2').value = n2;
+        document.getElementById('input-num3').value = n3;
+        document.querySelectorAll('.meihua-input-group input').forEach(function (inp) { inp.classList.remove('error'); });
+        doMeihuaCast();
+    });
+
+    btnTime.addEventListener('click', function () {
+        var now = new Date();
+        var year = now.getFullYear();
+        var month = now.getMonth() + 1;
+        var day = now.getDate();
+        var hour = now.getHours();
+        var shichen = Math.floor((hour + 1) / 2) % 12 || 12;
+
+        var n1 = (year + month + day) % 8;
+        var n2 = (year + month + day + shichen) % 8;
+        var n3 = (year + month + day + shichen) % 6;
+
+        document.getElementById('input-num1').value = n1 === 0 ? 8 : n1;
+        document.getElementById('input-num2').value = n2 === 0 ? 8 : n2;
+        document.getElementById('input-num3').value = n3 === 0 ? 6 : n3;
+        document.querySelectorAll('.meihua-input-group input').forEach(function (inp) { inp.classList.remove('error'); });
+        doMeihuaCast();
+    });
+
+    document.getElementById('btn-name-cast').addEventListener('click', doNameCast);
+    document.getElementById('input-name').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') doNameCast();
+    });
+
+    // 交叉起卦
+    if (btnCrossCast) {
+        btnCrossCast.addEventListener('click', doCrossCast);
+    }
+
+    // 切换交叉分析表单
+    var btnToggleCross = document.getElementById('btn-toggle-cross');
+    if (btnToggleCross) {
+        btnToggleCross.addEventListener('click', function () {
+            var birthControls = document.getElementById('birth-controls');
+            if (birthControls.classList.contains('hidden')) {
+                birthControls.classList.remove('hidden');
+                btnToggleCross.textContent = '收起';
+                isCrossModeActive = true;
+            } else {
+                birthControls.classList.add('hidden');
+                btnToggleCross.textContent = '交叉分析';
+                isCrossModeActive = false;
+            }
+        });
+    }
+
+    // 小六壬
+    if (btnLiuren) {
+        btnLiuren.addEventListener('click', doLiuren);
+    }
+
+    document.getElementById('btn-jiaobei').addEventListener('click', async function () {
+        if (isJiaobeiCasting) return;
+        isJiaobeiCasting = true;
+
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = '掷杯中…';
+
+        var gDisplay = document.getElementById('gua-display');
+        gDisplay.querySelectorAll('.jiaobei-result').forEach(function (el) { el.remove(); });
+        var placeholder = gDisplay.querySelector('.placeholder');
+        if (placeholder) placeholder.style.display = 'none';
+
+        document.getElementById('result').classList.add('hidden');
+
+        var yaoLines = [];
+        for (var i = 0; i < 6; i++) {
+            var jb = castJiaoBei();
+            yaoLines.push(jb.yao);
+            Animation.animateJiaobei(gDisplay, jb);
+            await new Promise(function (r) { setTimeout(r, 3000); });
+        }
+
+        var benGua = findGua(yaoLines);
+        var bianGuaResult = getBianGua(benGua, yaoLines);
+        var focus = getInterpretationFocus(benGua, bianGuaResult.gua, bianGuaResult.indices);
+
+        var result = {
+            benGua: benGua,
+            bianGua: bianGuaResult.gua,
+            changingIndices: bianGuaResult.indices,
+            focus: focus,
+            yaoLines: yaoLines
+        };
+        savedJiaobeiResult = result;
+
+        document.getElementById('result').classList.remove('hidden');
+        renderResult(result);
+
+        btn.disabled = false;
+        btn.textContent = '再掷一卦';
+        isJiaobeiCasting = false;
+    });
+
+    document.getElementById('btn-share').addEventListener('click', function () {
+        var result = null;
+        if (currentMode === 'tongqian') result = savedTongqianResult;
+        else if (currentMode === 'meihua') result = savedMeihuaResult;
+        else if (currentMode === 'name') result = savedNameResult;
+        else if (currentMode === 'jiaobei') result = savedJiaobeiResult;
+        else if (currentMode === 'liuren') return; // 小六壬暂无分享
+        if (result) generateShareCard(result, currentMode);
+    });
+
+    document.getElementById('input-name').addEventListener('input', function () {
+        this.classList.remove('error');
+    });
+
+    document.querySelectorAll('.meihua-input-group input').forEach(function (inp) {
+        inp.addEventListener('input', function () { inp.classList.remove('error'); });
+    });
+});
 
 function renderResult(result) {
     const nameEl = document.getElementById('gua-name');
@@ -379,117 +890,95 @@ function renderMeihuaResult(result) {
     }
     fragment.appendChild(focusDiv);
 
+    // 五格姓名学卡片
+    renderWuge(result, fragment);
+
     interpEl.appendChild(fragment);
 }
 
 function switchMode(mode) {
     currentMode = mode;
 
-    const tabTongqian = document.getElementById('tab-tongqian');
-    const tabMeihua = document.getElementById('tab-meihua');
-    const tabName = document.getElementById('tab-name');
-    const tabJiaobei = document.getElementById('tab-jiaobei');
-    const controls = document.getElementById('controls');
-    const meihuaControls = document.getElementById('meihua-controls');
-    const nameControls = document.getElementById('name-controls');
-    const jiaobeiControls = document.getElementById('jiaobei-controls');
-    const guaDisplay = document.getElementById('gua-display');
-    const resultDiv = document.getElementById('result');
-    const nameEl = document.getElementById('gua-name');
-    const symbolEl = document.getElementById('gua-symbol');
-    const interpEl = document.getElementById('gua-interpretation');
+    var tabTongqian = document.getElementById('tab-tongqian');
+    var tabMeihua = document.getElementById('tab-meihua');
+    var tabName = document.getElementById('tab-name');
+    var tabJiaobei = document.getElementById('tab-jiaobei');
+    var tabLiuren = document.getElementById('tab-liuren');
+    var controls = document.getElementById('controls');
+    var meihuaControls = document.getElementById('meihua-controls');
+    var nameControls = document.getElementById('name-controls');
+    var jiaobeiControls = document.getElementById('jiaobei-controls');
+    var liurenControls = document.getElementById('liuren-controls');
+    var guaDisplay = document.getElementById('gua-display');
+    var resultDiv = document.getElementById('result');
+    var nameEl = document.getElementById('gua-name');
+    var symbolEl = document.getElementById('gua-symbol');
+    var interpEl = document.getElementById('gua-interpretation');
+
+    // 重置所有 tab
+    tabTongqian.classList.remove('active');
+    tabMeihua.classList.remove('active');
+    tabName.classList.remove('active');
+    tabJiaobei.classList.remove('active');
+    if (tabLiuren) tabLiuren.classList.remove('active');
+
+    // 隐藏所有控件
+    controls.style.display = 'none';
+    meihuaControls.classList.add('hidden');
+    nameControls.classList.add('hidden');
+    jiaobeiControls.classList.add('hidden');
+    if (liurenControls) liurenControls.classList.add('hidden');
+
+    guaDisplay.querySelectorAll('.yao, .coin-flip, .meihua-trigram, .jiaobei-result').forEach(function (el) { el.remove(); });
+    guaDisplay.classList.remove('meihua-mode');
+    var placeholder = guaDisplay.querySelector('.placeholder');
+    if (placeholder) placeholder.style.display = '';
+
+    nameEl.textContent = '';
+    symbolEl.textContent = '';
+    interpEl.textContent = '';
+    resultDiv.classList.add('hidden');
 
     if (mode === 'tongqian') {
         tabTongqian.classList.add('active');
-        tabMeihua.classList.remove('active');
-        tabName.classList.remove('active');
-        tabJiaobei.classList.remove('active');
         controls.style.display = '';
-        // [FIX B1] 用 classList 管理 hidden，配合 CSS #id.hidden 复合选择器 (特异性 0,1,1,0 > 0,1,0,0)
-        meihuaControls.classList.add('hidden');
-        nameControls.classList.add('hidden');
-        jiaobeiControls.classList.add('hidden');
-        guaDisplay.classList.remove('meihua-mode');
-        guaDisplay.querySelectorAll('.meihua-trigram').forEach(el => el.remove());
-        const placeholder = guaDisplay.querySelector('.placeholder');
-        if (placeholder) placeholder.style.display = '';
-
         if (savedTongqianResult) {
             resultDiv.classList.remove('hidden');
             renderResult(savedTongqianResult);
-        } else {
-            resultDiv.classList.add('hidden');
         }
     } else if (mode === 'meihua') {
-        tabTongqian.classList.remove('active');
         tabMeihua.classList.add('active');
-        tabName.classList.remove('active');
-        tabJiaobei.classList.remove('active');
-        controls.style.display = 'none';
-        // [FIX B1] 同上
         meihuaControls.classList.remove('hidden');
-        nameControls.classList.add('hidden');
-        jiaobeiControls.classList.add('hidden');
-        // [FIX C1] 同时清理 .coin-flip
-        guaDisplay.querySelectorAll('.yao, .coin-flip').forEach(el => el.remove());
-        document.querySelectorAll('#gua-display .meihua-trigram').forEach(el => el.remove());
-        const placeholder = guaDisplay.querySelector('.placeholder');
         if (placeholder) placeholder.style.display = 'none';
-        guaDisplay.classList.remove('meihua-mode');
-        resultDiv.classList.add('hidden');
-        nameEl.textContent = '';
-        symbolEl.textContent = '';
-        interpEl.textContent = '';
-
         if (savedMeihuaResult) {
             resultDiv.classList.remove('hidden');
             renderMeihuaResult(savedMeihuaResult);
         }
     } else if (mode === 'name') {
-        tabTongqian.classList.remove('active');
-        tabMeihua.classList.remove('active');
         tabName.classList.add('active');
-        tabJiaobei.classList.remove('active');
-        controls.style.display = 'none';
-        meihuaControls.classList.add('hidden');
         nameControls.classList.remove('hidden');
-        jiaobeiControls.classList.add('hidden');
-        guaDisplay.querySelectorAll('.yao, .coin-flip, .meihua-trigram').forEach(el => el.remove());
-        guaDisplay.classList.remove('meihua-mode');
-        const placeholder = guaDisplay.querySelector('.placeholder');
-        if (placeholder) placeholder.style.display = '';
-        resultDiv.classList.add('hidden');
-        nameEl.textContent = '';
-        symbolEl.textContent = '';
-        interpEl.textContent = '';
-
-        if (savedNameResult) {
+        // 【FIX A2】交叉模式下保留和恢复交叉分析结果
+        if (isCrossModeActive && savedCrossResult) {
+            resultDiv.classList.remove('hidden');
+            renderCrossResult(savedCrossResult);
+        } else if (savedNameResult) {
             resultDiv.classList.remove('hidden');
             renderNameResult(savedNameResult);
         }
-    } else {
-        tabTongqian.classList.remove('active');
-        tabMeihua.classList.remove('active');
-        tabName.classList.remove('active');
+    } else if (mode === 'jiaobei') {
         tabJiaobei.classList.add('active');
-        controls.style.display = 'none';
-        meihuaControls.classList.add('hidden');
-        nameControls.classList.add('hidden');
         jiaobeiControls.classList.remove('hidden');
-        guaDisplay.querySelectorAll('.yao, .coin-flip, .meihua-trigram, .jiaobei-result').forEach(function (el) { el.remove(); });
-        guaDisplay.classList.remove('meihua-mode');
-        const placeholder = guaDisplay.querySelector('.placeholder');
-        if (placeholder) placeholder.style.display = '';
-
         if (savedJiaobeiResult) {
             resultDiv.classList.remove('hidden');
             renderResult(savedJiaobeiResult);
-        } else {
-            resultDiv.classList.add('hidden');
         }
-        nameEl.textContent = '';
-        symbolEl.textContent = '';
-        interpEl.textContent = '';
+    } else if (mode === 'liuren') {
+        if (tabLiuren) tabLiuren.classList.add('active');
+        if (liurenControls) liurenControls.classList.remove('hidden');
+        if (savedLiurenResult) {
+            resultDiv.classList.remove('hidden');
+            renderLiurenResult(savedLiurenResult);
+        }
     }
 }
 
@@ -549,7 +1038,6 @@ function doMeihuaCast() {
     savedMeihuaResult = result;
 
     const guaDisplay = document.getElementById('gua-display');
-    // [FIX C1] 同时清理 .coin-flip
     guaDisplay.querySelectorAll('.yao, .coin-flip, .meihua-trigram').forEach(el => el.remove());
     guaDisplay.classList.add('meihua-mode');
     const placeholder = guaDisplay.querySelector('.placeholder');
@@ -588,7 +1076,6 @@ function parseName(name) {
         if (COMPOUND_SURNAMES[name.substring(0, 2)]) {
             return { type: 'compound-double', surname: [name[0], name[1]], given: name.substring(2).split('') };
         }
-        // [FIX C2] 4+字非复姓：首字为姓，其余为名（而非前2字当复姓）
         return { type: 'single-triple', surname: [name[0]], given: name.substring(1).split('') };
     }
     return null;
@@ -650,12 +1137,104 @@ function nameCast(name) {
     };
 }
 
-function renderNameResult(result) {
+// --- 交叉起卦 (姓名+生辰) ---
+
+/**
+ * crossCast 姓名+生辰交叉起卦
+ * @param {string} name 姓名
+ * @param {number} year 公历年
+ * @param {number} month 公历月
+ * @param {number} day 公历日
+ * @param {number} hour 小时(0-23)
+ */
+function crossCast(name, year, month, day, hour) {
+    var parsed = parseName(name);
+    if (!parsed) return null;
+
+    var strokes = calcNameStrokes(parsed);
+    if (strokes.missing.length > 0 || strokes.surnameStrokes === 0 || strokes.givenStrokes === 0) return null;
+
+    var lunar = LunarCalendar.solarToLunar(year, month, day);
+    var shichen = LunarCalendar.hourToShift(hour);
+
+    // 公式: upper=(surnameStrokes+yearZhiNum)%8, lower=(givenStrokes+month)%8, dongYao=(day+shichen)%6
+    var upperNum = (strokes.surnameStrokes + lunar.yearZhiNum) % 8;
+    var lowerNum = (strokes.givenStrokes + lunar.lunarMonth) % 8;
+    var dongYaoNum = (lunar.lunarDay + shichen) % 6;
+    if (dongYaoNum === 0) dongYaoNum = 6;
+    if (upperNum === 0) upperNum = 8;
+    if (lowerNum === 0) lowerNum = 8;
+
+    var upper = numberToTrigram(upperNum);
+    var lower = numberToTrigram(lowerNum);
+    var binary = TRIGRAM_TO_BINARY[upper.symbol] + TRIGRAM_TO_BINARY[lower.symbol];
+    var benGua = GUA_BY_BINARY[binary];
+    if (!benGua) return null;
+
+    var huGua = calcHuGua(benGua);
+
+    var yaoLines = benGua.binary.split('').map(function (bit, i) {
+        return { value: parseInt(bit, 10), type: bit === '1' ? 'yang' : 'yin', changing: (i === (dongYaoNum - 1)) };
+    });
+    var bianGuaResult = getBianGua(benGua, yaoLines);
+
+    var tiYong = calcTiYong(upper, lower, dongYaoNum);
+    var tiWx = TRIGRAM_WUXING[tiYong.tiGua.symbol];
+    var yongWx = TRIGRAM_WUXING[tiYong.yongGua.symbol];
+    var shengke = judgeShengKe(tiWx, yongWx);
+
+    // 交叉命运等级: 综合体用生克与姓名生辰的契合度
+    var fateLevel = shengke.level;
+
+    // 【FIX A3】交叉参考五格数理评分调整 fateLevel
+    var wuge = calcWuge({ parsed: parsed, strokes: strokes });
+    var badCount = 0;
+    var wugeKeys = ['tian', 'ren', 'di', 'zong', 'wai'];
+    for (var wk = 0; wk < wugeKeys.length; wk++) {
+        var level = wuge[wugeKeys[wk]].judgment.level;
+        if (level === '凶' || level === '大凶') badCount++;
+    }
+    // badCount>=2 → 降1级；>=3 → 降2级；>=4 → 降3级
+    if (badCount >= 4) {
+        fateLevel = Math.max(1, fateLevel - 3);
+    } else if (badCount >= 3) {
+        fateLevel = Math.max(1, fateLevel - 2);
+    } else if (badCount >= 2) {
+        fateLevel = Math.max(1, fateLevel - 1);
+    }
+    // 三才凶 → 额外降1级
+    if (wuge.sancai && wuge.sancai.judgment && wuge.sancai.judgment.indexOf('凶') !== -1) {
+        fateLevel = Math.max(1, fateLevel - 1);
+    }
+
+    var changingIndices = bianGuaResult.indices;
+    var focus = getInterpretationFocus(benGua, bianGuaResult.gua, changingIndices);
+
+    return {
+        parsed: parsed,
+        strokes: strokes,
+        lunar: lunar,
+        shichen: shichen,
+        benGua: benGua,
+        huGua: huGua,
+        bianGua: bianGuaResult.gua,
+        tiYong: tiYong,
+        shengke: shengke,
+        upper: upper,
+        lower: lower,
+        dongYao: dongYaoNum,
+        focus: focus,
+        fateLevel: fateLevel,
+        wuge: wuge
+    };
+}
+
+function renderCrossResult(result) {
     var nameEl = document.getElementById('gua-name');
     var symbolEl = document.getElementById('gua-symbol');
     var interpEl = document.getElementById('gua-interpretation');
 
-    var { parsed, strokes, benGua, huGua, bianGua, tiYong, shengke, upper, lower, dongYao, focus } = result;
+    var { parsed, strokes, lunar, shichen, benGua, huGua, bianGua, tiYong, shengke, upper, lower, dongYao, focus, fateLevel } = result;
 
     nameEl.textContent = benGua.name + ' ' + benGua.symbol;
     symbolEl.textContent = '';
@@ -663,38 +1242,55 @@ function renderNameResult(result) {
     interpEl.textContent = '';
     var fragment = document.createDocumentFragment();
 
-    // [FIX F-05] 笔画明细使用 createElement + textContent 替代 innerHTML，防止 DOM XSS
+    // 生辰信息 + 笔画明细
     var detailDiv = document.createElement('div');
     detailDiv.className = 'stroke-detail';
     var strokeEntries = [];
     strokes.surnameChars.concat(strokes.givenChars).forEach(function (x) {
         var span = document.createElement('span');
         span.className = 'stroke-char';
-        var charText = document.createTextNode(x.char);
-        span.appendChild(charText);
-        var arrow = document.createTextNode('→');
-        span.appendChild(arrow);
+        span.appendChild(document.createTextNode(x.char));
+        span.appendChild(document.createTextNode('→'));
         var numSpan = document.createElement('span');
         numSpan.className = 'stroke-num';
         numSpan.textContent = x.stroke;
         span.appendChild(numSpan);
-        var hua = document.createTextNode('画');
-        span.appendChild(hua);
+        span.appendChild(document.createTextNode('画'));
         strokeEntries.push(span);
     });
     strokeEntries.forEach(function (s, i) {
-        if (i > 0) {
-            detailDiv.appendChild(document.createTextNode(' / '));
-        }
+        if (i > 0) detailDiv.appendChild(document.createTextNode(' / '));
         detailDiv.appendChild(s);
     });
-    var br = document.createElement('br');
-    detailDiv.appendChild(br);
-    var sumSpan = document.createElement('span');
-    sumSpan.className = 'stroke-sum';
-    sumSpan.textContent = '姓' + strokes.surnameStrokes + '画 + 名' + strokes.givenStrokes + '画 = ' + strokes.totalStrokes + '画，动在第' + dongYao + '爻';
-    detailDiv.appendChild(sumSpan);
+    var br1 = document.createElement('br');
+    detailDiv.appendChild(br1);
+    var lunarSpan = document.createElement('span');
+    lunarSpan.className = 'stroke-sum';
+    lunarSpan.textContent = '农历' + lunar.lunarYear + '年' + (lunar.isLeap ? '闰' : '') + lunar.lunarMonth + '月' + lunar.lunarDay + '日 ' + shichen + '时';
+    detailDiv.appendChild(lunarSpan);
+    var br2 = document.createElement('br');
+    detailDiv.appendChild(br2);
+    var formulaSpan = document.createElement('span');
+    formulaSpan.className = 'stroke-sum';
+    formulaSpan.textContent = '上卦=(姓' + strokes.surnameStrokes + '+' + lunar.yearZhiNum + ')%8=' + upper.xiantianNum + ' / 下卦=(名' + strokes.givenStrokes + '+' + lunar.lunarMonth + ')%8=' + lower.xiantianNum + ' / 动爻=(' + lunar.lunarDay + '+' + shichen + ')%6=' + dongYao;
+    detailDiv.appendChild(formulaSpan);
     fragment.appendChild(detailDiv);
+
+    // 交叉命运卡片
+    var fate = CROSS_FATE[fateLevel] || CROSS_FATE[3];
+    var fateCard = document.createElement('div');
+    fateCard.className = 'cross-fate-card';
+    fateCard.style.borderColor = fate.color;
+    var fateHeader = document.createElement('div');
+    fateHeader.className = 'card-header';
+    fateHeader.style.color = fate.color;
+    fateHeader.textContent = fate.label;
+    fateCard.appendChild(fateHeader);
+    var fateBody = document.createElement('div');
+    fateBody.className = 'card-body';
+    fateBody.textContent = fate.text;
+    fateCard.appendChild(fateBody);
+    fragment.appendChild(fateCard);
 
     // 本卦卡片
     var benCard = document.createElement('div');
@@ -716,7 +1312,7 @@ function renderNameResult(result) {
 
     appendPlainCard(fragment, benGua);
 
-    // 互卦卡片
+    // 互卦
     var huCard = document.createElement('div');
     huCard.className = 'meihua-card';
     var huHeader = document.createElement('div');
@@ -729,7 +1325,204 @@ function renderNameResult(result) {
     huCard.appendChild(huBody);
     fragment.appendChild(huCard);
 
-    // 变卦卡片
+    // 变卦
+    if (bianGua) {
+        var bCard = document.createElement('div');
+        bCard.className = 'bian-gua-card';
+        var bHeader = document.createElement('div');
+        bHeader.className = 'bian-gua-header';
+        bHeader.textContent = '→ 变卦：' + bianGua.name + ' ' + bianGua.symbol;
+        bCard.appendChild(bHeader);
+        var bJudgement = document.createElement('div');
+        bJudgement.className = 'bian-gua-judgement';
+        var strong2 = document.createElement('strong');
+        strong2.textContent = '卦辞：';
+        bJudgement.appendChild(strong2);
+        bJudgement.appendChild(document.createTextNode(bianGua.judgement));
+        bCard.appendChild(bJudgement);
+        var bPlainText = getPlainText(bianGua);
+        if (bPlainText) {
+            var bp = document.createElement('div');
+            bp.className = 'plain-card';
+            bp.style.marginTop = '8px';
+            bp.textContent = '💬 ' + bPlainText;
+            bCard.appendChild(bp);
+        }
+        fragment.appendChild(bCard);
+    }
+
+    // 体用生克
+    var levelClass = 'tiyong-level-' + shengke.level;
+    var tiyongCard = document.createElement('div');
+    tiyongCard.className = 'tiyong-card ' + levelClass;
+    var tiyongHeader = document.createElement('div');
+    tiyongHeader.className = 'card-header';
+    var icon = shengke.level >= 5 ? '✅' : shengke.level >= 4 ? '✅' : shengke.level >= 3 ? '✔️' : shengke.level >= 2 ? '⚠️' : '❌';
+    tiyongHeader.textContent = icon + ' 体用生克 — ' + shengke.judgment;
+    tiyongCard.appendChild(tiyongHeader);
+    var tiyongBody = document.createElement('div');
+    tiyongBody.className = 'card-body';
+    tiyongBody.textContent = '体卦=' + tiYong.tiGua.symbol + ' ' + TRIGRAM_WUXING[tiYong.tiGua.symbol] + ' / 用卦=' + tiYong.yongGua.symbol + ' ' + TRIGRAM_WUXING[tiYong.yongGua.symbol] + ' | ' + shengke.relation;
+    tiyongCard.appendChild(tiyongBody);
+    fragment.appendChild(tiyongCard);
+
+    // 焦点解读
+    var focusDiv = document.createElement('div');
+    focusDiv.className = 'gua-focus';
+    var focusHeader = document.createElement('div');
+    focusHeader.className = 'gua-focus-header';
+    focusHeader.textContent = '⚡ 解读焦点';
+    focusDiv.appendChild(focusHeader);
+    var primary = document.createElement('div');
+    primary.className = 'gua-focus-primary';
+    var strongF = document.createElement('strong');
+    strongF.textContent = '主看：';
+    primary.appendChild(strongF);
+    primary.appendChild(document.createTextNode(focus.primary));
+    focusDiv.appendChild(primary);
+    if (focus.secondary) {
+        var secondary = document.createElement('div');
+        secondary.className = 'gua-focus-secondary';
+        var strongS = document.createElement('strong');
+        strongS.textContent = '次看：';
+        secondary.appendChild(strongS);
+        secondary.appendChild(document.createTextNode(focus.secondary));
+        focusDiv.appendChild(secondary);
+    }
+    fragment.appendChild(focusDiv);
+
+    // 【FIX A3】交叉分析结果追加五格姓名学卡片
+    renderWuge(result, fragment);
+
+    interpEl.appendChild(fragment);
+}
+
+function doCrossCast() {
+    var nameInput = document.getElementById('input-name');
+    var yearInput = document.getElementById('input-birth-year');
+    var monthInput = document.getElementById('input-birth-month');
+    var dayInput = document.getElementById('input-birth-day');
+    var hourInput = document.getElementById('input-birth-hour');
+
+    nameInput.classList.remove('error');
+    yearInput.classList.remove('error');
+    monthInput.classList.remove('error');
+    dayInput.classList.remove('error');
+    hourInput.classList.remove('error');
+
+    var name = nameInput.value.trim();
+    var year = parseInt(yearInput.value, 10);
+    var month = parseInt(monthInput.value, 10);
+    var day = parseInt(dayInput.value, 10);
+    var hour = parseInt(hourInput.value, 10);
+
+    if (name.length < 2) { nameInput.classList.add('error'); return; }
+    if (isNaN(year) || year < 1900 || year > 2100) { yearInput.classList.add('error'); return; }
+    if (isNaN(month) || month < 1 || month > 12) { monthInput.classList.add('error'); return; }
+    if (isNaN(day) || day < 1 || day > 31) { dayInput.classList.add('error'); return; }
+    if (isNaN(hour) || hour < 0 || hour > 23) { hourInput.classList.add('error'); return; }
+
+    var result = crossCast(name, year, month, day, hour);
+    if (!result) {
+        nameInput.classList.add('error');
+        return;
+    }
+
+    savedCrossResult = result;
+
+    var guaDisplay = document.getElementById('gua-display');
+    guaDisplay.querySelectorAll('.yao, .coin-flip, .meihua-trigram').forEach(function (el) { el.remove(); });
+    guaDisplay.classList.add('meihua-mode');
+    var placeholder = guaDisplay.querySelector('.placeholder');
+    if (placeholder) placeholder.style.display = 'none';
+
+    var upperSpan = document.createElement('span');
+    upperSpan.className = 'meihua-trigram';
+    upperSpan.textContent = result.upper.symbol;
+    guaDisplay.appendChild(upperSpan);
+
+    var lowerSpan = document.createElement('span');
+    lowerSpan.className = 'meihua-trigram';
+    lowerSpan.textContent = result.lower.symbol;
+    guaDisplay.appendChild(lowerSpan);
+
+    document.getElementById('result').classList.remove('hidden');
+    renderCrossResult(result);
+}
+
+// --- 原有 renderNameResult ---
+
+function renderNameResult(result) {
+    var nameEl = document.getElementById('gua-name');
+    var symbolEl = document.getElementById('gua-symbol');
+    var interpEl = document.getElementById('gua-interpretation');
+
+    var { parsed, strokes, benGua, huGua, bianGua, tiYong, shengke, upper, lower, dongYao, focus } = result;
+
+    nameEl.textContent = benGua.name + ' ' + benGua.symbol;
+    symbolEl.textContent = '';
+
+    interpEl.textContent = '';
+    var fragment = document.createDocumentFragment();
+
+    var detailDiv = document.createElement('div');
+    detailDiv.className = 'stroke-detail';
+    var strokeEntries = [];
+    strokes.surnameChars.concat(strokes.givenChars).forEach(function (x) {
+        var span = document.createElement('span');
+        span.className = 'stroke-char';
+        span.appendChild(document.createTextNode(x.char));
+        span.appendChild(document.createTextNode('→'));
+        var numSpan = document.createElement('span');
+        numSpan.className = 'stroke-num';
+        numSpan.textContent = x.stroke;
+        span.appendChild(numSpan);
+        span.appendChild(document.createTextNode('画'));
+        strokeEntries.push(span);
+    });
+    strokeEntries.forEach(function (s, i) {
+        if (i > 0) detailDiv.appendChild(document.createTextNode(' / '));
+        detailDiv.appendChild(s);
+    });
+    var br = document.createElement('br');
+    detailDiv.appendChild(br);
+    var sumSpan = document.createElement('span');
+    sumSpan.className = 'stroke-sum';
+    sumSpan.textContent = '姓' + strokes.surnameStrokes + '画 + 名' + strokes.givenStrokes + '画 = ' + strokes.totalStrokes + '画，动在第' + dongYao + '爻';
+    detailDiv.appendChild(sumSpan);
+    fragment.appendChild(detailDiv);
+
+    var benCard = document.createElement('div');
+    benCard.className = 'meihua-card';
+    var benHeader = document.createElement('div');
+    benHeader.className = 'card-header';
+    benHeader.textContent = '本卦：' + benGua.name + ' ' + benGua.symbol;
+    benCard.appendChild(benHeader);
+    var benBody = document.createElement('div');
+    benBody.className = 'card-body';
+    var benJudgement = document.createElement('div');
+    var strong1 = document.createElement('strong');
+    strong1.textContent = '卦辞：';
+    benJudgement.appendChild(strong1);
+    benJudgement.appendChild(document.createTextNode(benGua.judgement));
+    benBody.appendChild(benJudgement);
+    benCard.appendChild(benBody);
+    fragment.appendChild(benCard);
+
+    appendPlainCard(fragment, benGua);
+
+    var huCard = document.createElement('div');
+    huCard.className = 'meihua-card';
+    var huHeader = document.createElement('div');
+    huHeader.className = 'card-header';
+    huHeader.textContent = '互卦：' + huGua.name + ' ' + huGua.symbol;
+    huCard.appendChild(huHeader);
+    var huBody = document.createElement('div');
+    huBody.className = 'card-body';
+    huBody.textContent = '揭示发展过程中的中间状态';
+    huCard.appendChild(huBody);
+    fragment.appendChild(huCard);
+
     if (bianGua) {
         var bCard = document.createElement('div');
         bCard.className = 'bian-gua-card';
@@ -757,7 +1550,6 @@ function renderNameResult(result) {
         fragment.appendChild(bCard);
     }
 
-    // 体用生克卡片
     var levelClass = 'tiyong-level-' + shengke.level;
     var tiyongCard = document.createElement('div');
     tiyongCard.className = 'tiyong-card ' + levelClass;
@@ -772,7 +1564,6 @@ function renderNameResult(result) {
     tiyongCard.appendChild(tiyongBody);
     fragment.appendChild(tiyongCard);
 
-    // 命名评价卡片
     var nameEval = document.createElement('div');
     nameEval.className = 'name-eval-card ' + levelClass;
     var evalHeader = document.createElement('div');
@@ -794,7 +1585,9 @@ function renderNameResult(result) {
     nameEval.appendChild(evalBody);
     fragment.appendChild(nameEval);
 
-    // 焦点解读
+    // 五格姓名学卡片
+    renderWuge(result, fragment);
+
     var focusDiv = document.createElement('div');
     focusDiv.className = 'gua-focus';
     var focusHeader = document.createElement('div');
@@ -826,7 +1619,6 @@ function doNameCast() {
     var input = document.getElementById('input-name');
     var name = input.value.trim();
 
-    // [FIX B4] 用 .error class 替代 inline borderColor，与梅花输入验证方式统一
     input.classList.remove('error');
 
     if (name.length < 2) {
@@ -844,7 +1636,6 @@ function doNameCast() {
     savedNameResult = result;
 
     var guaDisplay = document.getElementById('gua-display');
-    // [FIX C1] 同时清理 .coin-flip
     guaDisplay.querySelectorAll('.yao, .coin-flip, .meihua-trigram').forEach(function (el) { el.remove(); });
     guaDisplay.classList.add('meihua-mode');
     var placeholder = guaDisplay.querySelector('.placeholder');
@@ -864,311 +1655,397 @@ function doNameCast() {
     renderNameResult(result);
 }
 
-// --- 音效系统 ---
+// --- 小六壬 (Xiao Liu Ren) ---
 
-var audioCtx = null;
-function ensureAudio() {
-    if (!audioCtx) {
-        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { console.warn('[audio] AudioContext not available:', e); }
+var LIUREN_DATA = [
+    { name: '大安', judgment: '身不动时', meaning: '大安事事昌，求谋在东方，失物去不远，宅舍保安康。行人身未动，病者主无妨，将军回田野，仔细与推详。', level: 5, color: '#4caf50', element: '木', direction: '东' },
+    { name: '留连', judgment: '卒未归时', meaning: '留连事难成，求谋日不明，官事只宜缓，去者未回程。失物南方见，急讨方称心，更须防口舌，人口且平平。', level: 2, color: '#e05555', element: '水', direction: '南' },
+    { name: '速喜', judgment: '人便至时', meaning: '速喜喜来临，求财向南行，失物申午未，逢人路上寻。官事有福德，病者无祸侵，田宅六畜吉，行人有信音。', level: 4, color: '#2196f3', element: '火', direction: '南' },
+    { name: '赤口', judgment: '官事凶时', meaning: '赤口主口舌，官非切要防，失物急去寻，行人有惊慌。鸡犬多作怪，病者出西方，更须防诅咒，恐怕染瘟癀。', level: 1, color: '#d32f2f', element: '金', direction: '西' },
+    { name: '小吉', judgment: '人来喜时', meaning: '小吉最吉昌，路上好商量，阴人来报喜，失物在坤方。行人立便至，交关真是强，凡事皆和合，病者叩穹苍。', level: 5, color: '#4caf50', element: '木', direction: '坤(西南)' },
+    { name: '空亡', judgment: '音信稀时', meaning: '空亡事不长，阴人小乖张，求财无利益，行人有灾殃。失物寻不见，官事有刑伤，病人逢暗鬼，禳解保安康。', level: 1, color: '#9e9e9e', element: '土', direction: '中' }
+];
+
+/**
+ * 小六壬掐算
+ * @param {number} month 农历月(1-12)
+ * @param {number} day 农历日(1-30)
+ * @param {number} hour 时辰编号(1=子,2=丑,...,12=亥)
+ * @returns {{ position: number, result: object, steps: Array }}
+ */
+function xiaoliuren(month, day, hour) {
+    var idx = 0; // 从大安(index=0)开始
+    var steps = [{ idx: idx, name: LIUREN_DATA[idx].name, phase: '起始' }];
+
+    // 月上起日：从大安起正月，顺数到 month
+    idx = (month - 1) % 6;
+    steps.push({ idx: idx, name: LIUREN_DATA[idx].name, phase: '月上' });
+
+    // 日上起时：从月上位置顺数 day-1 步
+    var dayIdx = (idx + day - 1) % 6;
+    steps.push({ idx: dayIdx, name: LIUREN_DATA[dayIdx].name, phase: '日上' });
+
+    // 时上查掌诀：从日上位置顺数 hour-1 步
+    var finalIdx = (dayIdx + hour - 1) % 6;
+    steps.push({ idx: finalIdx, name: LIUREN_DATA[finalIdx].name, phase: '时上(最终)' });
+
+    return { position: finalIdx, result: LIUREN_DATA[finalIdx], steps: steps, month: month, day: day, hour: hour };
+}
+
+function renderLiurenResult(liuren) {
+    var interpEl = document.getElementById('gua-interpretation');
+    var nameEl = document.getElementById('gua-name');
+    var symbolEl = document.getElementById('gua-symbol');
+
+    nameEl.textContent = liuren.result.name;
+    symbolEl.textContent = '';
+
+    interpEl.textContent = '';
+    var fragment = document.createDocumentFragment();
+
+    // 结果主卡片
+    var card = document.createElement('div');
+    card.className = 'liuren-result-card';
+    card.style.borderColor = liuren.result.color;
+
+    var cardName = document.createElement('div');
+    cardName.className = 'liuren-result-name';
+    cardName.style.color = liuren.result.color;
+    cardName.textContent = liuren.result.name + ' (' + liuren.result.judgment + ')';
+    card.appendChild(cardName);
+
+    var cardInfo = document.createElement('div');
+    cardInfo.className = 'liuren-result-info';
+    cardInfo.textContent = '五行: ' + liuren.result.element + ' | 方位: ' + liuren.result.direction;
+    card.appendChild(cardInfo);
+
+    var cardMeaning = document.createElement('div');
+    cardMeaning.className = 'liuren-result-meaning';
+    cardMeaning.textContent = liuren.result.meaning;
+    card.appendChild(cardMeaning);
+
+    fragment.appendChild(card);
+
+    // 推算过程
+    var stepsDiv = document.createElement('div');
+    stepsDiv.className = 'liuren-steps';
+    var stepsTitle = document.createElement('div');
+    stepsTitle.className = 'liuren-steps-title';
+    stepsTitle.textContent = '推算过程: 农历' + liuren.month + '月' + liuren.day + '日 ' + liuren.hour + '时';
+    stepsDiv.appendChild(stepsTitle);
+
+    var stepsList = document.createElement('div');
+    stepsList.className = 'liuren-steps-list';
+    liuren.steps.forEach(function (s, i) {
+        var item = document.createElement('span');
+        item.className = 'liuren-step-item';
+        if (i === liuren.steps.length - 1) item.classList.add('liuren-step-final');
+        item.textContent = (i > 0 ? ' → ' : '') + s.phase + ':' + s.name;
+        stepsList.appendChild(item);
+    });
+    stepsDiv.appendChild(stepsList);
+    fragment.appendChild(stepsDiv);
+
+    interpEl.appendChild(fragment);
+}
+
+function doLiuren() {
+    var monthInput = document.getElementById('input-liuren-month');
+    var dayInput = document.getElementById('input-liuren-day');
+    var hourInput = document.getElementById('input-liuren-hour');
+
+    monthInput.classList.remove('error');
+    dayInput.classList.remove('error');
+    hourInput.classList.remove('error');
+
+    var month = parseInt(monthInput.value, 10);
+    var day = parseInt(dayInput.value, 10);
+    var hour = parseInt(hourInput.value, 10);
+
+    if (isNaN(month) || month < 1 || month > 12) { monthInput.classList.add('error'); return; }
+    if (isNaN(day) || day < 1 || day > 30) { dayInput.classList.add('error'); return; }
+    if (isNaN(hour) || hour < 1 || hour > 12) { hourInput.classList.add('error'); return; }
+
+    var result = xiaoliuren(month, day, hour);
+    savedLiurenResult = result;
+
+    // 动画
+    Animation.animateLiuren(document.getElementById('gua-display'), result);
+
+    document.getElementById('result').classList.remove('hidden');
+    renderLiurenResult(result);
+}
+
+// --- 五格姓名学 (Wuge) ---
+
+var WUGE_JUDGMENT = {
+    1:  { name: '太极之数', level: '大吉' },
+    2:  { name: '两仪之数', level: '凶' },
+    3:  { name: '三才之数', level: '大吉' },
+    4:  { name: '四象之数', level: '凶' },
+    5:  { name: '五行之数', level: '大吉' },
+    6:  { name: '六爻之数', level: '大吉' },
+    7:  { name: '七政之数', level: '大吉' },
+    8:  { name: '八卦之数', level: '大吉' },
+    9:  { name: '大成之数', level: '凶' },
+    10: { name: '终结之数', level: '凶' },
+    11: { name: '旱苗逢雨', level: '大吉' },
+    12: { name: '掘井无泉', level: '凶' },
+    13: { name: '春日牡丹', level: '大吉' },
+    14: { name: '破兆之数', level: '凶' },
+    15: { name: '福寿之数', level: '大吉' },
+    16: { name: '厚重之数', level: '大吉' },
+    17: { name: '刚强之数', level: '半吉' },
+    18: { name: '铁镜重磨', level: '半吉' },
+    19: { name: '多难之数', level: '凶' },
+    20: { name: '屋下藏金', level: '凶' },
+    21: { name: '明月中天', level: '大吉' },
+    22: { name: '秋草逢霜', level: '凶' },
+    23: { name: '壮丽之数', level: '大吉' },
+    24: { name: '掘藏得金', level: '大吉' },
+    25: { name: '资性英敏', level: '大吉' },
+    26: { name: '变怪之数', level: '凶' },
+    27: { name: '欲望无止', level: '凶' },
+    28: { name: '阔水浮萍', level: '凶' },
+    29: { name: '智谋之数', level: '半吉' },
+    30: { name: '非运之数', level: '凶' },
+    31: { name: '春日花开', level: '大吉' },
+    32: { name: '宝马金鞍', level: '大吉' },
+    33: { name: '旭日升天', level: '大吉' },
+    34: { name: '破家之数', level: '大凶' },
+    35: { name: '高楼望月', level: '大吉' },
+    36: { name: '波澜重叠', level: '凶' },
+    37: { name: '猛虎出林', level: '大吉' },
+    38: { name: '磨铁成针', level: '半吉' },
+    39: { name: '富贵荣华', level: '大吉' },
+    40: { name: '退安之数', level: '凶' },
+    41: { name: '有德之数', level: '大吉' },
+    42: { name: '寒蝉在柳', level: '凶' },
+    43: { name: '散财破产', level: '凶' },
+    44: { name: '烦闷之数', level: '凶' },
+    45: { name: '顺风之数', level: '大吉' },
+    46: { name: '浪里淘金', level: '凶' },
+    47: { name: '点石成金', level: '大吉' },
+    48: { name: '古松立鹤', level: '大吉' },
+    49: { name: '转变之数', level: '半吉' },
+    50: { name: '小舟入海', level: '凶' },
+    51: { name: '沉浮之数', level: '半吉' },
+    52: { name: '达眼之数', level: '大吉' },
+    53: { name: '曲卷难星', level: '凶' },
+    54: { name: '石上栽花', level: '凶' },
+    55: { name: '善恶之数', level: '凶' },
+    56: { name: '浪里行舟', level: '凶' },
+    57: { name: '日照春松', level: '大吉' },
+    58: { name: '晚行遇月', level: '半吉' },
+    59: { name: '寒蝉悲风', level: '凶' },
+    60: { name: '无谋之数', level: '凶' },
+    61: { name: '牡丹芙蓉', level: '大吉' },
+    62: { name: '衰败之数', level: '凶' },
+    63: { name: '舟归平海', level: '大吉' },
+    64: { name: '非命之数', level: '凶' },
+    65: { name: '巨流归海', level: '大吉' },
+    66: { name: '岩头步马', level: '凶' },
+    67: { name: '顺风通达', level: '大吉' },
+    68: { name: '顺风吹帆', level: '大吉' },
+    69: { name: '非业之数', level: '凶' },
+    70: { name: '残菊逢霜', level: '凶' },
+    71: { name: '石上金花', level: '半吉' },
+    72: { name: '劳苦之数', level: '凶' },
+    73: { name: '无勇之数', level: '半吉' },
+    74: { name: '残花经霜', level: '凶' },
+    75: { name: '退守之数', level: '凶' },
+    76: { name: '离散之数', level: '凶' },
+    77: { name: '半吉之数', level: '半吉' },
+    78: { name: '晚苦之数', level: '凶' },
+    79: { name: '云头望月', level: '凶' },
+    80: { name: '遁吉之数', level: '凶' },
+    81: { name: '万物回春', level: '大吉' }
+ };
+
+/**
+ * 计算五格数理
+ * @param {object} nameResult nameCast 返回的结果
+ * @returns {{ tian: number, ren: number, di: number, zong: number, wai: number }}
+ */
+function calcWuge(nameResult) {
+    var strokes = nameResult.strokes;
+    var parsed = nameResult.parsed;
+
+    // 天格: 姓氏笔画 + 1 (单姓) 或 姓氏笔画总和 (复姓)
+    var tian;
+    if (parsed.type === 'compound-single' || parsed.type === 'compound-double') {
+        tian = strokes.surnameStrokes;
+    } else {
+        tian = strokes.surnameStrokes + 1;
     }
-    return audioCtx;
+
+    // 人格: 姓氏末字 + 名字首字
+    var ren;
+    var lastSurnameStroke = parsed.surname.length === 1
+        ? strokes.surnameStrokes
+        : (strokes.surnameChars[strokes.surnameChars.length - 1].stroke || 0);
+    var firstGivenStroke = strokes.givenChars[0].stroke || 0;
+    ren = lastSurnameStroke + firstGivenStroke;
+
+    // 地格: 名字总笔画 (单名则+1)
+    var di;
+    if (parsed.given.length === 1) {
+        di = strokes.givenStrokes + 1;
+    } else {
+        di = strokes.givenStrokes;
+    }
+
+    // 总格: 姓+名总笔画
+    var zong = strokes.totalStrokes;
+
+    // 外格: 总格 - 人格 + 1 (单姓单名); 总格 - 人格 + 1 通用公式
+    var wai = zong - ren + 1;
+    if (parsed.given.length === 1 && (parsed.type === 'single-single' || parsed.type === 'compound-single')) {
+        wai = 2; // 单名的外格特殊处理
+    }
+
+    // 限制在 1-81 范围内
+    var clamp = function (n) { return Math.max(1, Math.min(81, n)); };
+
+    var wuge = {
+        tian: { value: clamp(tian), name: '天格', raw: tian },
+        ren:  { value: clamp(ren), name: '人格', raw: ren },
+        di:   { value: clamp(di), name: '地格', raw: di },
+        zong: { value: clamp(zong), name: '总格', raw: zong },
+        wai:  { value: clamp(wai), name: '外格', raw: wai }
+    };
+
+    // 附加五行属性
+    var wuxingMap = function (n) {
+        var x = n % 10;
+        if (x === 1 || x === 2) return '木';
+        if (x === 3 || x === 4) return '火';
+        if (x === 5 || x === 6) return '土';
+        if (x === 7 || x === 8) return '金';
+        return '水';
+    };
+
+    wuge.tian.wuxing = wuxingMap(clamp(tian));
+    wuge.ren.wuxing = wuxingMap(clamp(ren));
+    wuge.di.wuxing = wuxingMap(clamp(di));
+    wuge.zong.wuxing = wuxingMap(clamp(zong));
+    wuge.wai.wuxing = wuxingMap(clamp(wai));
+
+    wuge.tian.judgment = WUGE_JUDGMENT[clamp(tian)] || { name: '未知', level: '--' };
+    wuge.ren.judgment = WUGE_JUDGMENT[clamp(ren)] || { name: '未知', level: '--' };
+    wuge.di.judgment = WUGE_JUDGMENT[clamp(di)] || { name: '未知', level: '--' };
+    wuge.zong.judgment = WUGE_JUDGMENT[clamp(zong)] || { name: '未知', level: '--' };
+    wuge.wai.judgment = WUGE_JUDGMENT[clamp(wai)] || { name: '未知', level: '--' };
+
+    wuge.sancai = calcSancai(wuge);
+
+    return wuge;
 }
 
-function playCastSound() {
-    try {
-        var ctx = ensureAudio();
-        if (!ctx) return;
-        var o = ctx.createOscillator();
-        var g = ctx.createGain();
-        o.connect(g);
-        g.connect(ctx.destination);
-        o.frequency.value = 800;
-        o.type = 'sine';
-        g.gain.setValueAtTime(0.08, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-        o.start();
-        o.stop(ctx.currentTime + 0.1);
-    // [FIX F-10] 空 catch 添加 console.warn，按安全审查要求
-    } catch(e) { console.warn('[audio] playCastSound failed:', e); }
-}
+/**
+ * 三才五行配置
+ */
+function calcSancai(wuge) {
+    var t = wuge.tian.wuxing;
+    var r = wuge.ren.wuxing;
+    var d = wuge.di.wuxing;
 
-function playChangingSound() {
-    try {
-        var ctx = ensureAudio();
-        if (!ctx) return;
-        var o = ctx.createOscillator();
-        var g = ctx.createGain();
-        o.connect(g);
-        g.connect(ctx.destination);
-        o.frequency.value = 1200;
-        o.type = 'sine';
-        g.gain.setValueAtTime(0.08, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-        o.start();
-        o.stop(ctx.currentTime + 0.2);
-    // [FIX F-10] 空 catch 添加 console.warn，按安全审查要求
-    } catch(e) { console.warn('[audio] playChangingSound failed:', e); }
-}
+    var result = { tianWuxing: t, renWuxing: r, diWuxing: d, config: t + r + d, judgment: '', level: 3 };
 
-// --- 分享卡片 ---
-
-function generateShareCard(result, mode) {
-    try {
-        var canvas = document.createElement('canvas');
-        canvas.width = 600;
-        canvas.height = 800;
-        var ctx = canvas.getContext('2d');
-
-        ctx.fillStyle = '#0f0f0f';
-        ctx.fillRect(0, 0, 600, 800);
-
-        ctx.strokeStyle = '#c9a94e';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(10, 10, 580, 780);
-
-        ctx.fillStyle = '#f0d060';
-        ctx.font = '32px serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(result.benGua.name + ' ' + result.benGua.symbol, 300, 80);
-
-        ctx.font = '64px serif';
-        ctx.fillText(result.benGua.symbol, 300, 180);
-
-        ctx.fillStyle = '#e0d6c2';
-        ctx.font = '18px serif';
-        wrapText(ctx, result.benGua.judgement, 40, 230, 520, 28);
-
-        var yPos = 290;
-        ctx.font = '16px serif';
-        if (result.yaoLines) {
-            for (var i = 5; i >= 0; i--) {
-                var label = result.yaoLines[i].changing ? '⚡ ' : '';
-                ctx.fillStyle = result.yaoLines[i].changing ? '#c9a94e' : '#e0d6c2';
-                ctx.textAlign = 'left';
-                ctx.fillText(label + result.benGua.lines[i], 40, yPos);
-                yPos += 26;
-            }
-        }
-
-        if (result.bianGua) {
-            yPos += 12;
-            ctx.fillStyle = '#c9a94e';
-            ctx.font = '18px serif';
-            ctx.textAlign = 'left';
-            ctx.fillText('→ 变卦：' + result.bianGua.name + ' ' + result.bianGua.symbol, 40, yPos);
-            yPos += 26;
-            ctx.fillStyle = '#e0d6c2';
-            ctx.font = '16px serif';
-            ctx.fillText(result.bianGua.judgement, 40, yPos);
-        }
-
-        ctx.fillStyle = 'rgba(201, 169, 78, 0.07)';
-        ctx.font = 'bold 72px serif';
-        ctx.textAlign = 'center';
-        ctx.save();
-        ctx.translate(300, 390);
-        ctx.rotate(-0.4);
-        ctx.fillText('仅供娱乐', 0, -30);
-        ctx.fillText('luyi14-bits', 0, 40);
-        ctx.restore();
-
-        ctx.fillStyle = 'rgba(201, 169, 78, 0.4)';
-        ctx.font = '14px serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('天问 · AskTheOracle', 300, 770);
-
-        ctx.fillStyle = 'rgba(201, 169, 78, 0.15)';
-        ctx.font = '12px serif';
-        ctx.fillText('本工具仅供娱乐，结果请勿作为人生决策依据', 300, 755);
-
-        canvas.toBlob(function(blob) {
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = result.benGua.name.replace(/[^一-龥]/g, '') + '_天问.png';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
-        });
-    } catch(e) { console.warn('[share] Canvas share failed:', e); }
-}
-
-function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-    var chars = text.split('');
-    var line = '';
-    var lineY = y;
-    for (var i = 0; i < chars.length; i++) {
-        var testLine = line + chars[i];
-        if (ctx.measureText(testLine).width > maxWidth && i > 0) {
-            ctx.fillText(line, x, lineY);
-            line = chars[i];
-            lineY += lineHeight;
+    // 三才相生的最佳组合
+    // 天格生人格、人格生地格：大吉
+    if (WUXING_SHENG[t] === r && WUXING_SHENG[r] === d) {
+        result.judgment = '大吉·三才相生';
+        result.level = 5;
+    } else if (WUXING_SHENG[t] === r && r === d) {
+        result.judgment = '吉·天人相生，人地比和';
+        result.level = 4;
+    } else if (t === r && WUXING_SHENG[r] === d) {
+        result.judgment = '吉·天人比和，人地相生';
+        result.level = 4;
+    } else if (t === r && r === d) {
+        result.judgment = '平·三才比和';
+        result.level = 3;
+    } else if (WUXING_SHENG[t] === r && WUXING_KE[r] === d) {
+        result.judgment = '弱·天生人，人克地';
+        result.level = 2;
+    } else if (WUXING_SHENG[d] === r && WUXING_SHENG[r] === t) {
+        result.judgment = '凶·逆克相生';
+        result.level = 1;
+    } else {
+        // 检查相克
+        if (WUXING_KE[t] === r) {
+            result.judgment = '凶·天克人，运势受阻';
+            result.level = 1;
+        } else if (WUXING_KE[r] === d) {
+            result.judgment = '弱·人克地，根基不稳';
+            result.level = 2;
         } else {
-            line = testLine;
+            result.judgment = '平·三才一般';
+            result.level = 3;
         }
     }
-    ctx.fillText(line, x, lineY);
+
+    return result;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const btnCast = document.getElementById("btn-cast");
-    const resultDiv = document.getElementById("result");
-    const guaDisplay = document.getElementById("gua-display");
-    const tabTongqian = document.getElementById('tab-tongqian');
-    const tabMeihua = document.getElementById('tab-meihua');
-    const btnMeihuaCast = document.getElementById('btn-meihua-cast');
-    const btnRandom = document.getElementById('btn-meihua-random');
-    const btnTime = document.getElementById('btn-meihua-time');
-    let isCasting = false;
-    let isJiaobeiCasting = false;
+/**
+ * 在命名结果中追加五格姓名学卡片
+ */
+function renderWuge(nameResult, fragment) {
+    var wuge = calcWuge(nameResult);
 
-    btnCast.addEventListener("click", async () => {
-        if (isCasting) return;
-        isCasting = true;
-        btnCast.disabled = true;
-        btnCast.textContent = "起卦中…";
+    var card = document.createElement('div');
+    card.className = 'wuge-card';
 
-        // [FIX C1] 同时清理 .coin-flip 元素，避免铜钱旋转动画残留
-        document.querySelectorAll('#gua-display .yao, #gua-display .coin-flip').forEach(el => el.remove());
-        const placeholder = guaDisplay.querySelector('.placeholder');
-        if (placeholder) placeholder.style.display = 'none';
+    var cardTitle = document.createElement('div');
+    cardTitle.className = 'wuge-card-title';
+    cardTitle.textContent = '五格姓名学';
+    card.appendChild(cardTitle);
 
-        resultDiv.classList.add('hidden');
+    var keys = ['tian', 'ren', 'di', 'zong', 'wai'];
+    keys.forEach(function (k) {
+        var g = wuge[k];
+        var row = document.createElement('div');
+        row.className = 'wuge-row';
 
-        const yaoLines = [];
-        for (let i = 0; i < 6; i++) {
-            const yao = castOnce();
-            yaoLines.push(yao);
-            Animation.animateCoinFlip(guaDisplay, yao);
-            playCastSound();
-            if (yao.changing) {
-                setTimeout(playChangingSound, 200);
-            }
-            await new Promise(r => setTimeout(r, 500));
-        }
+        var label = document.createElement('span');
+        label.className = 'wuge-label';
+        label.textContent = g.name;
+        row.appendChild(label);
 
-        const benGua = findGua(yaoLines);
-        const bianGuaResult = getBianGua(benGua, yaoLines);
-        const focus = getInterpretationFocus(benGua, bianGuaResult.gua, bianGuaResult.indices);
+        var val = document.createElement('span');
+        val.className = 'wuge-value';
+        val.textContent = g.value + '画 (' + g.wuxing + ')';
+        row.appendChild(val);
 
-        const result = {
-            benGua,
-            bianGua: bianGuaResult.gua,
-            changingIndices: bianGuaResult.indices,
-            focus,
-            yaoLines
-        };
-        savedTongqianResult = result;
+        var jud = document.createElement('span');
+        jud.className = 'wuge-judgment';
+        var j = g.judgment;
+        if (j.level === '大吉') jud.classList.add('wuge-daji');
+        else if (j.level === '吉') jud.classList.add('wuge-ji');
+        else if (j.level === '半吉') jud.classList.add('wuge-banji');
+        else if (j.level === '凶') jud.classList.add('wuge-xiong');
+        else if (j.level === '大凶') jud.classList.add('wuge-daxiong');
+        jud.textContent = j.name + ' (' + j.level + ')';
+        row.appendChild(jud);
 
-        renderResult(result);
-        resultDiv.classList.remove('hidden');
-
-        btnCast.disabled = false;
-        btnCast.textContent = "再掷一卦";
-        isCasting = false;
+        card.appendChild(row);
     });
 
-    tabTongqian.addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('tongqian'); });
-    tabMeihua.addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('meihua'); });
-    document.getElementById('tab-name').addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('name'); });
-    document.getElementById('tab-jiaobei').addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('jiaobei'); });
+    // 三才配置
+    var sancai = wuge.sancai;
+    var scRow = document.createElement('div');
+    scRow.className = 'wuge-sancai';
+    var scLabel = document.createElement('span');
+    scLabel.className = 'wuge-label';
+    scLabel.textContent = '三才';
+    scRow.appendChild(scLabel);
+    var scVal = document.createElement('span');
+    scVal.className = 'wuge-sancai-config';
+    scVal.textContent = sancai.config + ' ' + sancai.judgment;
+    scRow.appendChild(scVal);
+    card.appendChild(scRow);
 
-    btnMeihuaCast.addEventListener('click', doMeihuaCast);
-
-    btnRandom.addEventListener('click', () => {
-        const n1 = Math.floor(Math.random() * 999) + 1;
-        const n2 = Math.floor(Math.random() * 999) + 1;
-        const n3 = Math.floor(Math.random() * 999) + 1;
-        document.getElementById('input-num1').value = n1;
-        document.getElementById('input-num2').value = n2;
-        document.getElementById('input-num3').value = n3;
-        document.querySelectorAll('.meihua-input-group input').forEach(inp => inp.classList.remove('error'));
-        doMeihuaCast();
-    });
-
-    btnTime.addEventListener('click', () => {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1;
-        const day = now.getDate();
-        const hour = now.getHours();
-        const shichen = Math.floor((hour + 1) / 2) % 12 || 12;
-
-        const n1 = (year + month + day) % 8;
-        const n2 = (year + month + day + shichen) % 8;
-        const n3 = (year + month + day + shichen) % 6;
-
-        document.getElementById('input-num1').value = n1 === 0 ? 8 : n1;
-        document.getElementById('input-num2').value = n2 === 0 ? 8 : n2;
-        document.getElementById('input-num3').value = n3 === 0 ? 6 : n3;
-        document.querySelectorAll('.meihua-input-group input').forEach(inp => inp.classList.remove('error'));
-        doMeihuaCast();
-    });
-
-    document.getElementById('btn-name-cast').addEventListener('click', doNameCast);
-    document.getElementById('input-name').addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') doNameCast();
-    });
-
-    document.getElementById('btn-jiaobei').addEventListener('click', async function () {
-        if (isJiaobeiCasting) return;
-        isJiaobeiCasting = true;
-
-        var btn = this;
-        btn.disabled = true;
-        btn.textContent = '掷杯中…';
-
-        var guaDisplay = document.getElementById('gua-display');
-        guaDisplay.querySelectorAll('.jiaobei-result').forEach(function (el) { el.remove(); });
-        var placeholder = guaDisplay.querySelector('.placeholder');
-        if (placeholder) placeholder.style.display = 'none';
-
-        document.getElementById('result').classList.add('hidden');
-
-        var yaoLines = [];
-        for (var i = 0; i < 6; i++) {
-            var jb = castJiaoBei();
-            yaoLines.push(jb.yao);
-            Animation.animateJiaobei(guaDisplay, jb);
-            await new Promise(function (r) { setTimeout(r, 3000); });
-        }
-
-        var benGua = findGua(yaoLines);
-        var bianGuaResult = getBianGua(benGua, yaoLines);
-        var focus = getInterpretationFocus(benGua, bianGuaResult.gua, bianGuaResult.indices);
-
-        var result = {
-            benGua: benGua,
-            bianGua: bianGuaResult.gua,
-            changingIndices: bianGuaResult.indices,
-            focus: focus,
-            yaoLines: yaoLines
-        };
-        savedJiaobeiResult = result;
-
-        document.getElementById('result').classList.remove('hidden');
-        renderResult(result);
-
-        btn.disabled = false;
-        btn.textContent = '再掷一卦';
-        isJiaobeiCasting = false;
-    });
-
-    document.getElementById('btn-share').addEventListener('click', function () {
-        var result = null;
-        if (currentMode === 'tongqian') result = savedTongqianResult;
-        else if (currentMode === 'meihua') result = savedMeihuaResult;
-        else if (currentMode === 'name') result = savedNameResult;
-        else if (currentMode === 'jiaobei') result = savedJiaobeiResult;
-        if (result) generateShareCard(result, currentMode);
-    });
-    // [FIX B4] 输入时清除 error 样式，与梅花输入框行为一致
-    document.getElementById('input-name').addEventListener('input', function () {
-        this.classList.remove('error');
-    });
-
-    document.querySelectorAll('.meihua-input-group input').forEach(inp => {
-        inp.addEventListener('input', () => inp.classList.remove('error'));
-    });
-});
+    fragment.appendChild(card);
+}

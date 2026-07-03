@@ -105,5 +105,63 @@ const Animation = {
         requestAnimationFrame(() => {
             el.classList.add('jiaobei-visible');
         });
+    },
+
+    animateLiuren(container, liurenResult) {
+        // 清除旧内容
+        container.querySelectorAll('.yao, .coin-flip, .meihua-trigram, .liuren-palm').forEach(function (el) { el.remove(); });
+        var placeholder = container.querySelector('.placeholder');
+        if (placeholder) placeholder.style.display = 'none';
+        container.classList.remove('meihua-mode');
+
+        var palm = document.createElement('div');
+        palm.className = 'liuren-palm';
+
+        // 六掌诀位置
+        var positions = [
+            { name: '大安', top: '10%', left: '50%' },
+            { name: '留连', top: '28%', left: '72%' },
+            { name: '速喜', top: '52%', left: '72%' },
+            { name: '赤口', top: '75%', left: '50%' },
+            { name: '小吉', top: '52%', left: '28%' },
+            { name: '空亡', top: '28%', left: '28%' }
+        ];
+
+        positions.forEach(function (pos, i) {
+             var dot = document.createElement('div');
+             dot.className = 'liuren-dot';
+             dot.style.top = pos.top;
+             dot.style.left = pos.left;
+             dot.style.marginLeft = '-6px';
+             dot.style.marginTop = '-6px';
+
+            // 亮起步骤中的位置
+            var isInSteps = false;
+            liurenResult.steps.forEach(function (s) {
+                if (s.idx === i) isInSteps = true;
+            });
+            if (isInSteps) {
+                dot.classList.add('liuren-dot-active');
+                dot.style.backgroundColor = liurenResult.result.color;
+                dot.style.animationDelay = '0s';
+            }
+            if (i === liurenResult.position) {
+                dot.classList.add('liuren-dot-final');
+                dot.style.backgroundColor = liurenResult.result.color;
+            }
+
+            var label = document.createElement('div');
+            label.className = 'liuren-dot-label';
+            label.textContent = pos.name;
+            if (i === liurenResult.position) {
+                label.classList.add('liuren-dot-label-final');
+                label.style.color = liurenResult.result.color;
+            }
+            dot.appendChild(label);
+
+            palm.appendChild(dot);
+        });
+
+        container.appendChild(palm);
     }
 };

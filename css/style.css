@@ -137,6 +137,7 @@ header h1 {
 #birth-controls.hidden { display: none; }
 #name-controls.hidden { display: none; }
 #jiaobei-controls.hidden { display: none; }
+#liuren-controls.hidden { display: none; }
 
 #result {
     width: 100%;
@@ -779,5 +780,304 @@ footer {
     .name-input-row input {
         font-size: 1.1rem;
         padding: 10px 8px;
+    }
+}
+
+/* --- 交叉起卦 --- */
+.cross-fate-card {
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 2px solid;
+    text-align: center;
+}
+
+.cross-fate-card .card-header {
+    font-size: 1.15rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+}
+
+.cross-fate-card .card-body {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--color-text);
+}
+
+/* --- 生辰输入 --- */
+.birth-input-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.birth-input-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.birth-input-group label {
+    font-size: 0.75rem;
+    color: var(--color-text-dim);
+    text-align: center;
+}
+
+.birth-input-group input {
+    padding: 8px 4px;
+    font-size: 0.95rem;
+    font-family: var(--font-main);
+    background: var(--color-bg);
+    color: var(--color-text);
+    border: 1px solid rgba(201, 169, 78, 0.3);
+    border-radius: 6px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s ease;
+    -moz-appearance: textfield;
+}
+
+.birth-input-group input::-webkit-outer-spin-button,
+.birth-input-group input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.birth-input-group input:focus {
+    border-color: var(--color-accent);
+}
+
+.birth-input-group input.error {
+    border-color: #e05555;
+    box-shadow: 0 0 6px rgba(224, 85, 85, 0.4);
+}
+
+/* --- 小六壬掌诀动画 --- */
+.liuren-palm {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+}
+
+.liuren-dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(201, 169, 78, 0.3);
+    transition: all 0.3s ease;
+}
+
+.liuren-dot-active {
+    background: var(--color-accent);
+    box-shadow: 0 0 8px var(--color-accent);
+    animation: dotPulse 0.6s ease-in-out;
+}
+
+.liuren-dot-final {
+    box-shadow: 0 0 16px currentColor, 0 0 32px currentColor;
+    animation: dotGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+    0%   { transform: scale(0); }
+    60%  { transform: scale(1.8); }
+    100% { transform: scale(1); }
+}
+
+@keyframes dotGlow {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.5); opacity: 0.7; }
+}
+
+.liuren-dot-label {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 16px;  /* 【FIX A4】原 margin-top 导致标签可能溢出，改用 top:16px 固定定位 */
+    font-size: 0.7rem;
+    color: var(--color-text-dim);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.liuren-dot-label-final {
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+/* --- 小六壬结果卡片 --- */
+.liuren-result-card {
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 2px solid;
+    text-align: center;
+}
+
+.liuren-result-name {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+}
+
+.liuren-result-info {
+    font-size: 0.85rem;
+    color: var(--color-text-dim);
+    margin-bottom: 10px;
+}
+
+.liuren-result-meaning {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--color-text);
+    text-align: left;
+}
+
+.liuren-steps {
+    padding: 12px;
+    margin-top: 12px;
+    background: var(--color-bg);
+    border-radius: 8px;
+    border: 1px solid rgba(201, 169, 78, 0.15);
+}
+
+.liuren-steps-title {
+    font-size: 0.85rem;
+    color: var(--color-text-dim);
+    margin-bottom: 8px;
+}
+
+.liuren-steps-list {
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--color-text);
+}
+
+.liuren-step-item {
+    color: var(--color-text-dim);
+}
+
+.liuren-step-final {
+    color: var(--color-accent);
+    font-weight: bold;
+}
+
+/* --- 五格姓名学卡片 --- */
+.wuge-card {
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(201, 169, 78, 0.3);
+    background: var(--color-bg);
+}
+
+.wuge-card-title {
+    font-size: 1.1rem;
+    color: var(--color-accent);
+    margin-bottom: 12px;
+    text-align: center;
+    letter-spacing: 0.1em;
+}
+
+.wuge-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(201, 169, 78, 0.1);
+}
+
+.wuge-row:last-of-type {
+    border-bottom: none;
+}
+
+.wuge-label {
+    width: 48px;
+    font-size: 0.9rem;
+    color: var(--color-accent);
+    text-align: center;
+}
+
+.wuge-value {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--color-text);
+    text-align: center;
+}
+
+.wuge-judgment {
+    width: 130px;
+    font-size: 0.8rem;
+    text-align: right;
+}
+
+.wuge-daji {
+    color: #4caf50;
+}
+
+.wuge-ji {
+    color: #2196f3;
+}
+
+.wuge-banji {
+    color: var(--color-accent);
+}
+
+.wuge-xiong {
+    color: #ffc107;
+}
+
+.wuge-daxiong {
+    color: #e05555;
+}
+
+.wuge-sancai {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    margin-top: 8px;
+    border-top: 1px solid rgba(201, 169, 78, 0.2);
+}
+
+.wuge-sancai-config {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--color-text);
+    text-align: center;
+}
+
+/* --- 模式tab响应式 --- */
+@media (max-width: 480px) {
+    .mode-tab {
+        padding: 8px 6px;
+        font-size: 0.75rem;
+    }
+
+    .birth-input-row {
+        gap: 4px;
+    }
+
+    .birth-input-group input {
+        font-size: 0.85rem;
+        padding: 6px 2px;
+    }
+
+    .liuren-palm {
+        width: 160px;
+        height: 160px;
+    }
+
+    .liuren-dot-label {
+        font-size: 0.6rem;
+    }
+
+    .wuge-judgment {
+        width: 100px;
+        font-size: 0.7rem;
     }
 }
