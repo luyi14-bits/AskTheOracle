@@ -136,6 +136,7 @@ header h1 {
 #meihua-sub-tabs.hidden { display: none; }
 #birth-controls.hidden { display: none; }
 #name-controls.hidden { display: none; }
+#jiaobei-controls.hidden { display: none; }
 
 #result {
     width: 100%;
@@ -603,6 +604,85 @@ footer {
     margin-bottom: 12px;
     border-radius: 10px;
     border: 1px solid;
+}
+
+/* --- Plain Card (白话解读) --- */
+.plain-card {
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    background: rgba(26, 26, 26, 0.8);
+    border-left: 4px solid var(--color-accent);
+    border-radius: 0 8px 8px 0;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--color-text);
+}
+
+/* --- JiaoBei Animation --- */
+@keyframes jiaobeiDrop {
+    0%   { transform: translateY(-80px) rotateX(90deg); opacity: 0; }
+    60%  { transform: translateY(10px) rotateX(0deg); opacity: 1; }
+    80%  { transform: translateY(-5px); }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes jiaobeiGlow {
+    0%,100% { box-shadow: 0 0 4px currentColor; }
+    50% { box-shadow: 0 0 20px currentColor; }
+}
+
+.jiaobei-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    margin: 8px 0;
+    border-radius: 12px;
+    animation: jiaobeiDrop 0.8s ease-out forwards;
+    opacity: 0;
+}
+
+.jiaobei-visible {
+    opacity: 1;
+}
+
+.jiaobei-cup {
+    font-size: 48px;
+    line-height: 1;
+    animation: jiaobeiGlow 1.5s ease-in-out 0.8s infinite;
+}
+
+.jiaobei-shengbei {
+    color: #4caf50;
+}
+
+.jiaobei-shengbei .jiaobei-cup {
+    color: #4caf50;
+    text-shadow: 0 0 12px rgba(76, 175, 80, 0.6);
+}
+
+.jiaobei-xiaobei {
+    color: #ffc107;
+}
+
+.jiaobei-xiaobei .jiaobei-cup {
+    color: #ffc107;
+    text-shadow: 0 0 12px rgba(255, 193, 7, 0.6);
+}
+
+.jiaobei-yinbei {
+    color: #e05555;
+}
+
+.jiaobei-yinbei .jiaobei-cup {
+    color: #e05555;
+    text-shadow: 0 0 12px rgba(224, 85, 85, 0.6);
+}
+
+.jiaobei-label {
+    font-size: 1rem;
+    letter-spacing: 0.1em;
 }
 
 /* --- Coin Flip Animation --- */

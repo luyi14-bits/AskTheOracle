@@ -6,7 +6,6 @@
  */
 
 const Animation = {
-    // [FIX C3] drawGua 已由 animateCoinFlip 替代（app.js 无调用点），保留以兼容未来恢复
     drawGua(container, yao) {
         const el = document.createElement('div');
         el.className = 'yao';
@@ -68,5 +67,43 @@ const Animation = {
         } else {
             container.insertBefore(el, existingYaos[0]);
         }
+    },
+
+    animateJiaobei(container, result) {
+        const el = document.createElement('div');
+        el.className = 'jiaobei-result';
+
+        const cup1 = document.createElement('div');
+        cup1.className = 'jiaobei-cup jiaobei-cup-1';
+        const cup2 = document.createElement('div');
+        cup2.className = 'jiaobei-cup jiaobei-cup-2';
+
+        if (result.type === 'shengbei') {
+            el.classList.add('jiaobei-shengbei');
+            cup1.textContent = '◠';
+            cup2.textContent = '◠';
+        } else if (result.type === 'xiaobei') {
+            el.classList.add('jiaobei-xiaobei');
+            cup1.textContent = '◡';
+            cup2.textContent = '◡';
+        } else {
+            el.classList.add('jiaobei-yinbei');
+            cup1.textContent = '◠';
+            cup2.textContent = '◡';
+        }
+
+        el.appendChild(cup1);
+        el.appendChild(cup2);
+
+        const label = document.createElement('div');
+        label.className = 'jiaobei-label';
+        label.textContent = result.label;
+        el.appendChild(label);
+
+        container.appendChild(el);
+
+        requestAnimationFrame(() => {
+            el.classList.add('jiaobei-visible');
+        });
     }
 };

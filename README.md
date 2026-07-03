@@ -4,9 +4,9 @@
 
 🌐 **在线体验**：[luyi14-bits.github.io/AskTheOracle](https://luyi14-bits.github.io/AskTheOracle/)（手机浏览器打开可安装到桌面）
 
-![版本](https://img.shields.io/badge/version-A%200.6-aa8844)
+![版本](https://img.shields.io/badge/version-A%200.7-aa8844)
 ![协议](https://img.shields.io/badge/license-AGPL%20v3-blue)
-![状态](https://img.shields.io/badge/status-PWA%20就绪-success)
+![状态](https://img.shields.io/badge/status-六模式就绪-success)
 
 > ⚠️ **免责声明**：天问 (AskTheOracle) 仅供娱乐，所有卦象解读不构成任何人生决策依据。
 
@@ -20,6 +20,8 @@
 - **姓名起卦** — 姓名笔画数起卦，繁体康熙字典笔画标准，终身卦解读
 - **六十四卦全解** — 涵盖《易经》全部六十四卦，含卦辞、爻辞
 - **精美动画** — 铜钱抛掷、逐爻绘制等流畅动画
+- **掷筊问杯** — 传统筊杯掷六次，圣杯/笑杯/阴杯判定，得六十四卦
+- **白话解读** — 每卦一句白话总结，普通人也能看懂卦象含义
 - **PWA 离线版** — 手机端一键安装到桌面，断网也能占卜
 - **本地运行** — 纯前端应用，双击 `index.html` 即用，零依赖
 
@@ -38,6 +40,7 @@
 ├── js/
 │   ├── app.js              # 主逻辑
 │   ├── gua-data.js         # 六十四卦数据
+│   ├── plain-data.js       # 白话解卦数据
 │   ├── stroke-data.js      # 姓名笔画数据库
 │   └── animation.js        # 动画控制
 ├── docs/                   # 文档
@@ -45,21 +48,24 @@
 │   ├── PRD-问卦-v0.3.md
 │   ├── PRD-问卦-v0.4.md
 │   ├── PRD-问卦-v0.5.md
-│   └── PRD-天问-v0.6-PWA.md
-├── research/               # 研究资料 (6 份)
+│   ├── PRD-天问-v0.6-PWA.md
+│   └── PRD-天问-v0.7.md
+├── research/               # 研究资料 (8 份)
 ├── reports/                # 验收报告
 ├── .trae/specs/            # 开发规划
 │   ├── wengua-core-casting/
 │   ├── wengua-meihua/
 │   ├── wengua-name-divination/
 │   ├── wengua-polish/
-│   └── wengua-pwa/
+│   ├── wengua-pwa/
+│   └── wengua-v07/
 ├── versions/               # 版本归档
 │   ├── A0.2/               # 项目初始化
 │   ├── A0.3/               # 铜钱+梅花双模式
 │   ├── A0.4/               # 姓名起卦
 │   ├── A0.5/               # 体验打磨
-│   └── A0.6/               # PWA 移动端（当前）
+│   ├── A0.6/               # PWA 移动端
+│   └── A0.7/               # 掷筊+白话（当前）
 ├── .github/                # 社区规范
 ├── LICENSE                 # AGPL v3
 ├── CONTRIBUTING.md
@@ -80,7 +86,8 @@
 | **A 0.3** | 铜钱掷爻 + 梅花易数双模式 | ✅ 已冻结 |
 | **A 0.4** | 姓名起卦 + 笔画数据库 | ✅ 已冻结 |
 | **A 0.5** | 动画音效 + 分享功能 + 体验打磨 | ✅ 已冻结 |
-| **A 0.6** | PWA 移动端 — 一键安装到桌面，离线可用 | ✅ 已发布 |
+| **A 0.6** | PWA 移动端 — 一键安装到桌面，离线可用 | ✅ 已冻结 |
+| **A 0.7** | 掷筊问杯 + 白话解卦 — 第六种起卦模式，64 卦白话 | ✅ 已发布 |
 
 ---
 

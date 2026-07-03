@@ -26,6 +26,7 @@ var currentMode = 'tongqian';
 var savedTongqianResult = null;
 var savedMeihuaResult = null;
 var savedNameResult = null;
+var savedJiaobeiResult = null;
 
 // [FIX B3] COMPOUND_SURNAMES 去重：移除 司马/宇文/慕容/诸葛/欧阳/梁丘 重复条目
 var COMPOUND_SURNAMES = {
@@ -45,6 +46,17 @@ function castOnce() {
     const type = (heads === 2 || heads === 0) ? 'yang' : 'yin';
     const changing = (heads === 3 || heads === 0);
     return { type, changing, value: (type === 'yang' ? 1 : 0) };
+}
+
+function castJiaoBei() {
+    var r = Math.random();
+    if (r < 0.5) {
+        return { type: 'shengbei', label: '圣杯 ✅', yao: { type: 'yang', changing: false, value: 1 } };
+    } else if (r < 0.75) {
+        return { type: 'xiaobei', label: '笑杯 ⚠️', yao: { type: 'yin', changing: false, value: 0 } };
+    } else {
+        return { type: 'yinbei', label: '阴杯 ❌', yao: { type: 'yang', changing: true, value: 1 } };
+    }
 }
 
 function findGua(yaoLines) {
@@ -135,6 +147,15 @@ function appendTextWithLabel(parent, label, text) {
     parent.appendChild(document.createTextNode(text));
 }
 
+function appendPlainCard(fragment, gua) {
+    var text = getPlainText(gua);
+    if (!text) return;
+    var card = document.createElement('div');
+    card.className = 'plain-card';
+    card.textContent = '💬 ' + text;
+    fragment.appendChild(card);
+}
+
 function renderResult(result) {
     const nameEl = document.getElementById('gua-name');
     const symbolEl = document.getElementById('gua-symbol');
@@ -152,6 +173,8 @@ function renderResult(result) {
     judgement.className = 'gua-judgement';
     appendTextWithLabel(judgement, '卦辞：', benGua.judgement);
     fragment.appendChild(judgement);
+
+    appendPlainCard(fragment, benGua);
 
     const yaoList = document.createElement('div');
     yaoList.className = 'yao-lines-list';
@@ -178,6 +201,15 @@ function renderResult(result) {
         bgJudgement.className = 'bian-gua-judgement';
         appendTextWithLabel(bgJudgement, '卦辞：', bianGua.judgement);
         card.appendChild(bgJudgement);
+
+        const bgPlainText = getPlainText(bianGua);
+        if (bgPlainText) {
+            const bgp = document.createElement('div');
+            bgp.className = 'plain-card';
+            bgp.style.marginTop = '8px';
+            bgp.textContent = '💬 ' + bgPlainText;
+            card.appendChild(bgp);
+        }
 
         fragment.appendChild(card);
     }
@@ -277,6 +309,8 @@ function renderMeihuaResult(result) {
     benCard.appendChild(benBody);
     fragment.appendChild(benCard);
 
+    appendPlainCard(fragment, benGua);
+
     const huCard = document.createElement('div');
     huCard.className = 'meihua-card';
     const huHeader = document.createElement('div');
@@ -300,6 +334,16 @@ function renderMeihuaResult(result) {
         bgJudgement.className = 'bian-gua-judgement';
         appendTextWithLabel(bgJudgement, '卦辞：', bianGua.judgement);
         card.appendChild(bgJudgement);
+
+        var plainText = getPlainText(bianGua);
+        if (plainText) {
+            var bp = document.createElement('div');
+            bp.className = 'plain-card';
+            bp.style.marginTop = '8px';
+            bp.textContent = '💬 ' + plainText;
+            card.appendChild(bp);
+        }
+
         fragment.appendChild(card);
     }
 
@@ -344,9 +388,11 @@ function switchMode(mode) {
     const tabTongqian = document.getElementById('tab-tongqian');
     const tabMeihua = document.getElementById('tab-meihua');
     const tabName = document.getElementById('tab-name');
+    const tabJiaobei = document.getElementById('tab-jiaobei');
     const controls = document.getElementById('controls');
     const meihuaControls = document.getElementById('meihua-controls');
     const nameControls = document.getElementById('name-controls');
+    const jiaobeiControls = document.getElementById('jiaobei-controls');
     const guaDisplay = document.getElementById('gua-display');
     const resultDiv = document.getElementById('result');
     const nameEl = document.getElementById('gua-name');
@@ -357,10 +403,12 @@ function switchMode(mode) {
         tabTongqian.classList.add('active');
         tabMeihua.classList.remove('active');
         tabName.classList.remove('active');
+        tabJiaobei.classList.remove('active');
         controls.style.display = '';
         // [FIX B1] 用 classList 管理 hidden，配合 CSS #id.hidden 复合选择器 (特异性 0,1,1,0 > 0,1,0,0)
         meihuaControls.classList.add('hidden');
         nameControls.classList.add('hidden');
+        jiaobeiControls.classList.add('hidden');
         guaDisplay.classList.remove('meihua-mode');
         guaDisplay.querySelectorAll('.meihua-trigram').forEach(el => el.remove());
         const placeholder = guaDisplay.querySelector('.placeholder');
@@ -376,10 +424,12 @@ function switchMode(mode) {
         tabTongqian.classList.remove('active');
         tabMeihua.classList.add('active');
         tabName.classList.remove('active');
+        tabJiaobei.classList.remove('active');
         controls.style.display = 'none';
         // [FIX B1] 同上
         meihuaControls.classList.remove('hidden');
         nameControls.classList.add('hidden');
+        jiaobeiControls.classList.add('hidden');
         // [FIX C1] 同时清理 .coin-flip
         guaDisplay.querySelectorAll('.yao, .coin-flip').forEach(el => el.remove());
         document.querySelectorAll('#gua-display .meihua-trigram').forEach(el => el.remove());
@@ -395,15 +445,15 @@ function switchMode(mode) {
             resultDiv.classList.remove('hidden');
             renderMeihuaResult(savedMeihuaResult);
         }
-    } else {
+    } else if (mode === 'name') {
         tabTongqian.classList.remove('active');
         tabMeihua.classList.remove('active');
         tabName.classList.add('active');
+        tabJiaobei.classList.remove('active');
         controls.style.display = 'none';
-        // [FIX B1] 同上
         meihuaControls.classList.add('hidden');
         nameControls.classList.remove('hidden');
-        // [FIX C1] 同时清理 .coin-flip
+        jiaobeiControls.classList.add('hidden');
         guaDisplay.querySelectorAll('.yao, .coin-flip, .meihua-trigram').forEach(el => el.remove());
         guaDisplay.classList.remove('meihua-mode');
         const placeholder = guaDisplay.querySelector('.placeholder');
@@ -417,6 +467,29 @@ function switchMode(mode) {
             resultDiv.classList.remove('hidden');
             renderNameResult(savedNameResult);
         }
+    } else {
+        tabTongqian.classList.remove('active');
+        tabMeihua.classList.remove('active');
+        tabName.classList.remove('active');
+        tabJiaobei.classList.add('active');
+        controls.style.display = 'none';
+        meihuaControls.classList.add('hidden');
+        nameControls.classList.add('hidden');
+        jiaobeiControls.classList.remove('hidden');
+        guaDisplay.querySelectorAll('.yao, .coin-flip, .meihua-trigram, .jiaobei-result').forEach(function (el) { el.remove(); });
+        guaDisplay.classList.remove('meihua-mode');
+        const placeholder = guaDisplay.querySelector('.placeholder');
+        if (placeholder) placeholder.style.display = '';
+
+        if (savedJiaobeiResult) {
+            resultDiv.classList.remove('hidden');
+            renderResult(savedJiaobeiResult);
+        } else {
+            resultDiv.classList.add('hidden');
+        }
+        nameEl.textContent = '';
+        symbolEl.textContent = '';
+        interpEl.textContent = '';
     }
 }
 
@@ -641,6 +714,8 @@ function renderNameResult(result) {
     benCard.appendChild(benBody);
     fragment.appendChild(benCard);
 
+    appendPlainCard(fragment, benGua);
+
     // 互卦卡片
     var huCard = document.createElement('div');
     huCard.className = 'meihua-card';
@@ -669,6 +744,16 @@ function renderNameResult(result) {
         bJudgement.appendChild(strong2);
         bJudgement.appendChild(document.createTextNode(bianGua.judgement));
         bCard.appendChild(bJudgement);
+
+        var bPlainText = getPlainText(bianGua);
+        if (bPlainText) {
+            var bp = document.createElement('div');
+            bp.className = 'plain-card';
+            bp.style.marginTop = '8px';
+            bp.textContent = '💬 ' + bPlainText;
+            bCard.appendChild(bp);
+        }
+
         fragment.appendChild(bCard);
     }
 
@@ -936,6 +1021,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnRandom = document.getElementById('btn-meihua-random');
     const btnTime = document.getElementById('btn-meihua-time');
     let isCasting = false;
+    let isJiaobeiCasting = false;
 
     btnCast.addEventListener("click", async () => {
         if (isCasting) return;
@@ -983,9 +1069,10 @@ document.addEventListener("DOMContentLoaded", () => {
         isCasting = false;
     });
 
-    tabTongqian.addEventListener('click', () => switchMode('tongqian'));
-    tabMeihua.addEventListener('click', () => switchMode('meihua'));
-    document.getElementById('tab-name').addEventListener('click', () => switchMode('name'));
+    tabTongqian.addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('tongqian'); });
+    tabMeihua.addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('meihua'); });
+    document.getElementById('tab-name').addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('name'); });
+    document.getElementById('tab-jiaobei').addEventListener('click', function () { if (!isJiaobeiCasting) switchMode('jiaobei'); });
 
     btnMeihuaCast.addEventListener('click', doMeihuaCast);
 
@@ -1024,11 +1111,56 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === 'Enter') doNameCast();
     });
 
+    document.getElementById('btn-jiaobei').addEventListener('click', async function () {
+        if (isJiaobeiCasting) return;
+        isJiaobeiCasting = true;
+
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = '掷杯中…';
+
+        var guaDisplay = document.getElementById('gua-display');
+        guaDisplay.querySelectorAll('.jiaobei-result').forEach(function (el) { el.remove(); });
+        var placeholder = guaDisplay.querySelector('.placeholder');
+        if (placeholder) placeholder.style.display = 'none';
+
+        document.getElementById('result').classList.add('hidden');
+
+        var yaoLines = [];
+        for (var i = 0; i < 6; i++) {
+            var jb = castJiaoBei();
+            yaoLines.push(jb.yao);
+            Animation.animateJiaobei(guaDisplay, jb);
+            await new Promise(function (r) { setTimeout(r, 3000); });
+        }
+
+        var benGua = findGua(yaoLines);
+        var bianGuaResult = getBianGua(benGua, yaoLines);
+        var focus = getInterpretationFocus(benGua, bianGuaResult.gua, bianGuaResult.indices);
+
+        var result = {
+            benGua: benGua,
+            bianGua: bianGuaResult.gua,
+            changingIndices: bianGuaResult.indices,
+            focus: focus,
+            yaoLines: yaoLines
+        };
+        savedJiaobeiResult = result;
+
+        document.getElementById('result').classList.remove('hidden');
+        renderResult(result);
+
+        btn.disabled = false;
+        btn.textContent = '再掷一卦';
+        isJiaobeiCasting = false;
+    });
+
     document.getElementById('btn-share').addEventListener('click', function () {
         var result = null;
         if (currentMode === 'tongqian') result = savedTongqianResult;
         else if (currentMode === 'meihua') result = savedMeihuaResult;
         else if (currentMode === 'name') result = savedNameResult;
+        else if (currentMode === 'jiaobei') result = savedJiaobeiResult;
         if (result) generateShareCard(result, currentMode);
     });
     // [FIX B4] 输入时清除 error 样式，与梅花输入框行为一致

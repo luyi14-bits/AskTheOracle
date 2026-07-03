@@ -4,6 +4,23 @@ All notable changes to AskTheOracle will be documented in this file.
 
 ---
 
+## [A 0.7] — 2026-07-03
+
+### Added
+- 掷筊问杯 mode — traditional jiaobei (moon block) divination, 6 throws → hexagram
+- 白话解卦 — plain-language interpretation for all 64 hexagrams (`plain-data.js`)
+- 64 hexagram plain-text summaries (~100 chars each)
+- `wengua-v07` spec & acceptance report
+
+### Research
+- 圣杯起卦 research document (history, three-outcome system, hexagram bridge)
+- 白话解卦 research document (writing rules, rendering design)
+
+### Archived
+- `versions/A0.7` snapshot (63 files)
+
+---
+
 ## [A 0.6] — 2026-07-03
 
 ### Added
