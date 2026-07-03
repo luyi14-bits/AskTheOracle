@@ -4,6 +4,23 @@ All notable changes to AskTheOracle will be documented in this file.
 
 ---
 
+## [A 0.8] — 2026-07-03
+
+### Added
+- 交叉起卦 mode — 姓名 + 生辰八字合参终身卦 (`crossCast` function)
+- 掐指小六壬 mode — 月日时三推掌诀六神断吉凶 (大安/留连/速喜/赤口/小吉/空亡)
+- 五格姓名学 — 天格/人格/地格/总格/外格 81 数理 + 三才五行配置
+- 交叉命运等级 — 综合体用生克 × 五格数理 × 三才配置的 5 级评分
+- `wengua-v08` spec & acceptance report
+
+### Fixed
+- 交叉起卦命运等级偏高 BUG — 删 auto-boost + 降低 badCount 降级阈值
+
+### Archived
+- `versions/A0.8` snapshot (70 files)
+
+---
+
 ## [A 0.7] — 2026-07-03
 
 ### Added

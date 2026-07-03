@@ -185,6 +185,8 @@ var savedNameResult = null;
 var savedJiaobeiResult = null;
 var savedCrossResult = null;
 var savedLiurenResult = null;
+var savedLiurenSolarResult = null;
+var currentLiurenSubMode = 'lunar';
 var isCrossModeActive = false;
 
 // --- 交叉起卦命运等级 ---
@@ -604,6 +606,20 @@ document.addEventListener("DOMContentLoaded", function () {
         btnLiuren.addEventListener('click', doLiuren);
     }
 
+    // 小六壬子模式
+    var liurenTabLunar = document.getElementById('liuren-tab-lunar');
+    var liurenTabSolar = document.getElementById('liuren-tab-solar');
+    var btnLiurenSolar = document.getElementById('btn-liuren-solar');
+    if (liurenTabLunar) {
+        liurenTabLunar.addEventListener('click', function () { switchLiurenSubMode('lunar'); });
+    }
+    if (liurenTabSolar) {
+        liurenTabSolar.addEventListener('click', function () { switchLiurenSubMode('solar'); });
+    }
+    if (btnLiurenSolar) {
+        btnLiurenSolar.addEventListener('click', doLiurenSolar);
+    }
+
     document.getElementById('btn-jiaobei').addEventListener('click', async function () {
         if (isJiaobeiCasting) return;
         isJiaobeiCasting = true;
@@ -975,6 +991,7 @@ function switchMode(mode) {
     } else if (mode === 'liuren') {
         if (tabLiuren) tabLiuren.classList.add('active');
         if (liurenControls) liurenControls.classList.remove('hidden');
+        switchLiurenSubMode(currentLiurenSubMode);
         if (savedLiurenResult) {
             resultDiv.classList.remove('hidden');
             renderLiurenResult(savedLiurenResult);
@@ -1731,7 +1748,11 @@ function renderLiurenResult(liuren) {
     stepsDiv.className = 'liuren-steps';
     var stepsTitle = document.createElement('div');
     stepsTitle.className = 'liuren-steps-title';
-    stepsTitle.textContent = '推算过程: 农历' + liuren.month + '月' + liuren.day + '日 ' + liuren.hour + '时';
+    if (liuren.solarSource) {
+        stepsTitle.textContent = '推算过程: 公历' + liuren.solarSource + ' → 农历' + liuren.month + '月' + liuren.day + '日 ' + liuren.hour + '时';
+    } else {
+        stepsTitle.textContent = '推算过程: 农历' + liuren.month + '月' + liuren.day + '日 ' + liuren.hour + '时';
+    }
     stepsDiv.appendChild(stepsTitle);
 
     var stepsList = document.createElement('div');
@@ -1747,6 +1768,120 @@ function renderLiurenResult(liuren) {
     fragment.appendChild(stepsDiv);
 
     interpEl.appendChild(fragment);
+}
+
+// --- 小六壬子模式路由 ---
+
+function switchLiurenSubMode(mode) {
+    currentLiurenSubMode = mode;
+
+    var tabLunar = document.getElementById('liuren-tab-lunar');
+    var tabSolar = document.getElementById('liuren-tab-solar');
+    var lunarControls = document.getElementById('liuren-lunar-controls');
+    var solarControls = document.getElementById('liuren-solar-controls');
+
+    tabLunar.classList.toggle('active', mode === 'lunar');
+    tabSolar.classList.toggle('active', mode === 'solar');
+    lunarControls.classList.toggle('hidden', mode !== 'lunar');
+    solarControls.classList.toggle('hidden', mode !== 'solar');
+
+    if (mode === 'solar') {
+        initLiurenSolarSelects();
+    }
+}
+
+var _liurenSolarInitialized = false;
+
+function initLiurenSolarSelects() {
+    if (_liurenSolarInitialized) return;
+    _liurenSolarInitialized = true;
+
+    var selYear = document.getElementById('liuren-sel-year');
+    for (var y = 1900; y <= 2100; y++) {
+        var opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        selYear.appendChild(opt);
+    }
+    selYear.value = new Date().getFullYear();
+
+    var selMonth = document.getElementById('liuren-sel-month');
+    for (var m = 1; m <= 12; m++) {
+        var opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m;
+        selMonth.appendChild(opt);
+    }
+
+    var selDay = document.getElementById('liuren-sel-day');
+    updateLiurenDayOptions();
+
+    selYear.addEventListener('change', updateLiurenDayOptions);
+    selMonth.addEventListener('change', updateLiurenDayOptions);
+
+    var selHour = document.getElementById('liuren-sel-hour');
+    for (var h = 0; h <= 23; h++) {
+        var opt = document.createElement('option');
+        opt.value = h;
+        opt.textContent = h;
+        selHour.appendChild(opt);
+    }
+    selHour.value = 12;
+
+    var selMinute = document.getElementById('liuren-sel-minute');
+    for (var mi = 0; mi <= 59; mi++) {
+        var opt = document.createElement('option');
+        opt.value = mi;
+        opt.textContent = mi < 10 ? '0' + mi : '' + mi;
+        selMinute.appendChild(opt);
+    }
+}
+
+function updateLiurenDayOptions() {
+    var selYear = document.getElementById('liuren-sel-year');
+    var selMonth = document.getElementById('liuren-sel-month');
+    var selDay = document.getElementById('liuren-sel-day');
+    var year = parseInt(selYear.value, 10);
+    var month = parseInt(selMonth.value, 10);
+    var maxDay = (month === 2) ? ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 29 : 28)
+                : ([31,0,31,30,31,30,31,31,30,31,30,31][month - 1]);
+
+    var currentDay = parseInt(selDay.value, 10);
+    selDay.innerHTML = '';
+    for (var d = 1; d <= maxDay; d++) {
+        var opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        selDay.appendChild(opt);
+    }
+    if (currentDay >= 1 && currentDay <= maxDay) {
+        selDay.value = currentDay;
+    }
+}
+
+function doLiurenSolar() {
+    var year = parseInt(document.getElementById('liuren-sel-year').value, 10);
+    var month = parseInt(document.getElementById('liuren-sel-month').value, 10);
+    var day = parseInt(document.getElementById('liuren-sel-day').value, 10);
+    var hour = parseInt(document.getElementById('liuren-sel-hour').value, 10);
+
+    var lunar = LunarCalendar.solarToLunar(year, month, day);
+    if (!lunar) { alert('年份超出范围（1900-2100）'); return; }
+
+    var lunarMonth = lunar.lunarMonth;
+    var lunarDay = lunar.lunarDay;
+
+    var hourZhi = LunarCalendar.hourToShift(hour);
+
+    var result = xiaoliuren(lunarMonth, lunarDay, hourZhi);
+    result.solarSource = year + '/' + month + '/' + day + ' ' + hour + ':00';
+    savedLiurenSolarResult = result;
+    savedLiurenResult = result;
+
+    Animation.animateLiuren(document.getElementById('gua-display'), result);
+
+    document.getElementById('result').classList.remove('hidden');
+    renderLiurenResult(result);
 }
 
 function doLiuren() {

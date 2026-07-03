@@ -686,6 +686,37 @@ footer {
     letter-spacing: 0.1em;
 }
 
+/* --- Liuren Sub-mode Tabs --- */
+#liuren-sub-tabs {
+    display: flex;
+    width: 100%;
+    border-bottom: 1px solid rgba(201, 169, 78, 0.15);
+    margin-bottom: 16px;
+}
+
+.liuren-sub-tab {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    font-family: var(--font-main);
+    background: transparent;
+    color: var(--color-text-dim);
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: all 0.2s ease;
+}
+
+.liuren-sub-tab:hover {
+    color: var(--color-text);
+}
+
+.liuren-sub-tab.active {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+}
+
 /* --- Coin Flip Animation --- */
 @keyframes coinFlip {
     0%   { transform: rotateY(0deg) scale(0); opacity: 0; }

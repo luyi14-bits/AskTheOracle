@@ -109,21 +109,56 @@
 
             <!-- 小六壬掐指区 -->
             <div id="liuren-controls" class="hidden">
-                <div class="meihua-input-row">
-                    <div class="meihua-input-group">
-                        <label for="input-liuren-month">农历月</label>
-                        <input type="number" id="input-liuren-month" min="1" max="12" placeholder="1-12">
-                    </div>
-                    <div class="meihua-input-group">
-                        <label for="input-liuren-day">农历日</label>
-                        <input type="number" id="input-liuren-day" min="1" max="30" placeholder="1-30">
-                    </div>
-                    <div class="meihua-input-group">
-                        <label for="input-liuren-hour">时辰</label>
-                        <input type="number" id="input-liuren-hour" min="1" max="12" placeholder="1-12">
-                    </div>
+                <div id="liuren-sub-tabs">
+                    <button id="liuren-tab-lunar" class="liuren-sub-tab active">农历推算</button>
+                    <button id="liuren-tab-solar" class="liuren-sub-tab">公历推算</button>
                 </div>
-                <button id="btn-liuren-cast" class="btn-primary">掐指推算</button>
+
+                <div id="liuren-lunar-controls">
+                    <div class="meihua-input-row">
+                        <div class="meihua-input-group">
+                            <label for="input-liuren-month">农历月</label>
+                            <input type="number" id="input-liuren-month" min="1" max="12" placeholder="1-12">
+                        </div>
+                        <div class="meihua-input-group">
+                            <label for="input-liuren-day">农历日</label>
+                            <input type="number" id="input-liuren-day" min="1" max="30" placeholder="1-30">
+                        </div>
+                        <div class="meihua-input-group">
+                            <label for="input-liuren-hour">时辰</label>
+                            <input type="number" id="input-liuren-hour" min="1" max="12" placeholder="1-12">
+                        </div>
+                    </div>
+                    <button id="btn-liuren-cast" class="btn-primary">掐指推算</button>
+                </div>
+
+                <div id="liuren-solar-controls" class="hidden">
+                    <div class="birth-input-row">
+                        <div class="birth-input-group">
+                            <label for="liuren-sel-year">年</label>
+                            <select id="liuren-sel-year"></select>
+                        </div>
+                        <div class="birth-input-group">
+                            <label for="liuren-sel-month">月</label>
+                            <select id="liuren-sel-month"></select>
+                        </div>
+                        <div class="birth-input-group">
+                            <label for="liuren-sel-day">日</label>
+                            <select id="liuren-sel-day"></select>
+                        </div>
+                    </div>
+                    <div class="birth-input-row">
+                        <div class="birth-input-group">
+                            <label for="liuren-sel-hour">时</label>
+                            <select id="liuren-sel-hour"></select>
+                        </div>
+                        <div class="birth-input-group">
+                            <label for="liuren-sel-minute">分</label>
+                            <select id="liuren-sel-minute"></select>
+                        </div>
+                    </div>
+                    <button id="btn-liuren-solar" class="btn-primary">掐指推算</button>
+                </div>
             </div>
 
             <!-- 结果区 -->
